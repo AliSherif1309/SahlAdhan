@@ -9,17 +9,19 @@ import kotlin.math.*
 /** Offline prayer-time calculation (standard astronomical formulas, ~1 min accuracy). */
 object PrayerCalc {
     /** ishaMinutes > 0 means Isha = Maghrib + fixed minutes. */
-    data class Method(val name: String, val fajr: Double, val isha: Double, val ishaMinutes: Int,
+    data class Method(val name: String, val nameAr: String, val fajr: Double, val isha: Double, val ishaMinutes: Int,
                       /** built-in minute offsets: Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha */
                       val off: IntArray = IntArray(6))
 
     val methods = listOf(
-        Method("Qatar (Awqaf / Khatmah)", 18.0, 0.0, 90, intArrayOf(-2, -1, 0, 0, 2, 0)),
-        Method("Umm al-Qura (Fajr 18.5°, Isha +90 min)", 18.5, 0.0, 90),
-        Method("Muslim World League (18° / 17°)", 18.0, 17.0, 0),
-        Method("Egyptian (19.5° / 17.5°)", 19.5, 17.5, 0),
-        Method("Karachi (18° / 18°)", 18.0, 18.0, 0),
-        Method("ISNA (15° / 15°)", 15.0, 15.0, 0),
+        Method("Qatar · Khatmah timetable", "قطر · مطابق لختمة", 18.0, 0.0, 90, intArrayOf(-2, -1, 0, 0, 2, 0)),
+        Method("Qatar Calendar House (18°, Isha +90 min)", "دار التقويم القطري (١٨°، العشاء +٩٠ د)", 18.0, 0.0, 90),
+        Method("Gulf (19.5°, Isha +90 min)", "الخليج (١٩٫٥°، العشاء +٩٠ د)", 19.5, 0.0, 90),
+        Method("Umm al-Qura (18.5°, Isha +90 min)", "أم القرى (١٨٫٥°، العشاء +٩٠ د)", 18.5, 0.0, 90),
+        Method("Muslim World League (18° / 17°)", "رابطة العالم الإسلامي (١٨° / ١٧°)", 18.0, 17.0, 0),
+        Method("Egyptian (19.5° / 17.5°)", "الهيئة المصرية (١٩٫٥° / ١٧٫٥°)", 19.5, 17.5, 0),
+        Method("Karachi (18° / 18°)", "كراتشي (١٨° / ١٨°)", 18.0, 18.0, 0),
+        Method("ISNA (15° / 15°)", "أمريكا الشمالية (١٥° / ١٥°)", 15.0, 15.0, 0),
     )
 
     data class City(val en: String, val ar: String, val lat: Double, val lng: Double, val tz: String)

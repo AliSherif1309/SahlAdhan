@@ -219,7 +219,7 @@ class MainActivity : Activity() {
         val sCard = card()
         sCard.addView(text(getString(R.string.settings), 14f, c(R.color.sub), true))
         sCard.addView(text(getString(R.string.method), 13f, c(R.color.text)))
-        sCard.addView(spinner(PrayerCalc.methods.map { it.name }, prefs.methodIndex) { prefs.methodIndex = it; refreshAll() })
+        sCard.addView(spinner(PrayerCalc.methods.map { if (ar) it.nameAr else it.name }, prefs.methodIndex) { prefs.methodIndex = it; refreshAll() })
         sCard.addView(text(getString(R.string.asr_method), 13f, c(R.color.text)))
         sCard.addView(spinner(listOf(getString(R.string.asr_std), getString(R.string.asr_hanafi)), if (prefs.hanafi) 1 else 0) { prefs.hanafi = it == 1; refreshAll() })
         sCard.addView(text(getString(R.string.adjust), 13f, c(R.color.text)).apply { setPadding(0, (8 * dp).toInt(), 0, 0) })
