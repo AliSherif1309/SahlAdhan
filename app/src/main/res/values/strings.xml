@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">Sahl Adhan</string>
+    <string name="widget_compact">Sahl Adhan · Next prayer</string>
+    <string name="widget_wide">Sahl Adhan · Today</string>
+    <string name="fajr">Fajr</string>
+    <string name="sunrise">Sunrise</string>
+    <string name="dhuhr">Dhuhr</string>
+    <string name="asr">Asr</string>
+    <string name="maghrib">Maghrib</string>
+    <string name="isha">Isha</string>
+    <string name="next">Next</string>
+    <string name="city">City</string>
+    <string name="method">Calculation method</string>
+    <string name="asr_method">Asr</string>
+    <string name="asr_std">Standard (Shafi, Maliki, Hanbali)</string>
+    <string name="asr_hanafi">Hanafi</string>
+    <string name="alert_full">Full adhan</string>
+    <string name="alert_short">Short alert</string>
+    <string name="alert_off">Off</string>
+    <string name="adjust">Minute adjustments</string>
+    <string name="alerts">Adhan alerts</string>
+    <string name="settings">Prayer-time settings</string>
+    <string name="test_full">Test full adhan (1 min)</string>
+    <string name="test_short">Test short alert (1 min)</string>
+    <string name="test_set">Test alert set for one minute from now. Lock the phone to check it.</string>
+    <string name="ready">✓ Alerts are ready</string>
+    <string name="need_notif">Notifications are off. Tap to allow so the adhan can sound.</string>
+    <string name="need_alarm">Exact alarms are not allowed. Tap to allow so alerts come on time.</string>
+    <string name="battery_tip">On Honor: Settings › Apps › Sahl Adhan › Battery › App launch → Manage manually, allow all three.</string>
+    <string name="time_for">Time for %1$s prayer</string>
+    <string name="test_title">Sahl Adhan test</string>
+    <string name="in_time">in</string>
+</resources>

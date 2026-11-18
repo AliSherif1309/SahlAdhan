@@ -1,0 +1,28 @@
+name: Build Sahl Adhan APK
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # If you uploaded the project as SahlAdhan.zip, unpack it first
+      - name: Unpack zip if present
+        run: |
+          if [ -f SahlAdhan.zip ] && [ ! -f settings.gradle.kts ]; then
+            unzip -o SahlAdhan.zip
+            if [ -d SahlAdhan ]; then cp -r SahlAdhan/. . ; fi
+          fi
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+      - run: gradle assembleRelease --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SahlAdhan-apk
+          path: app/build/outputs/apk/release/*.apk

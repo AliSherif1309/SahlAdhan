@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">سهل للأذان</string>
+    <string name="widget_compact">سهل للأذان · الصلاة القادمة</string>
+    <string name="widget_wide">سهل للأذان · مواقيت اليوم</string>
+    <string name="fajr">الفجر</string>
+    <string name="sunrise">الشروق</string>
+    <string name="dhuhr">الظهر</string>
+    <string name="asr">العصر</string>
+    <string name="maghrib">المغرب</string>
+    <string name="isha">العشاء</string>
+    <string name="next">القادمة</string>
+    <string name="city">المدينة</string>
+    <string name="method">طريقة الحساب</string>
+    <string name="asr_method">العصر</string>
+    <string name="asr_std">الجمهور (شافعي، مالكي، حنبلي)</string>
+    <string name="asr_hanafi">حنفي</string>
+    <string name="alert_full">أذان كامل</string>
+    <string name="alert_short">تنبيه قصير</string>
+    <string name="alert_off">إيقاف</string>
+    <string name="adjust">تعديل الدقائق</string>
+    <string name="alerts">تنبيهات الأذان</string>
+    <string name="settings">إعدادات المواقيت</string>
+    <string name="test_full">تجربة الأذان الكامل (بعد دقيقة)</string>
+    <string name="test_short">تجربة التنبيه القصير (بعد دقيقة)</string>
+    <string name="test_set">تم ضبط التجربة بعد دقيقة. اقفل الشاشة للتأكد.</string>
+    <string name="ready">✓ التنبيهات جاهزة</string>
+    <string name="need_notif">الإشعارات متوقفة. اضغط للسماح حتى يعمل الأذان.</string>
+    <string name="need_alarm">المنبهات الدقيقة غير مسموحة. اضغط للسماح.</string>
+    <string name="battery_tip">في هونر: الإعدادات › التطبيقات › سهل للأذان › البطارية › تشغيل التطبيق ← إدارة يدوية، وفعّل الخيارات الثلاثة.</string>
+    <string name="time_for">حان وقت صلاة %1$s</string>
+    <string name="test_title">تجربة سهل للأذان</string>
+    <string name="in_time">بعد</string>
+</resources>
