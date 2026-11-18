@@ -37,12 +37,16 @@ jobs:
       - run: gradle assembleRelease --no-daemon
         env:
           KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
-      - name: Name the APK
-        run: cp app/build/outputs/apk/release/*.apk SahlAdhan-v1.${{ github.run_number }}.apk
+      - name: Name the APK and notes
+        env:
+          MSG: ${{ github.event.head_commit.message }}
+        run: |
+          cp app/build/outputs/apk/release/*.apk SahlAdhan-v1.${{ github.run_number }}.apk
+          printf '%s\n' "$MSG" | head -n 1 > notes.txt
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.${{ github.run_number }}
           name: Sahl Adhan v1.${{ github.run_number }}
-          body: ${{ github.event.head_commit.message }}
+          body_path: notes.txt
           files: SahlAdhan-v1.${{ github.run_number }}.apk
           make_latest: true

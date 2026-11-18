@@ -44,12 +44,15 @@ object Scheduler {
         val tomorrow = prefs.fard(now.toLocalDate().plusDays(1))
         val am = ctx.getSystemService(AlarmManager::class.java)
 
-        for (i in 0..4) {
+        val sunToday = prefs.times(now.toLocalDate())[1]
+        val sunTomorrow = prefs.times(now.toLocalDate().plusDays(1))[1]
+        for (i in 0..5) {
             val intent = Intent(ctx, AlarmReceiver::class.java).setAction(ACTION_ALERT)
                 .putExtra(EXTRA_PRAYER, i).putExtra(EXTRA_MODE, prefs.alert(i))
             val p = pi(ctx, i, intent)
             if (prefs.alert(i) == ALERT_OFF) { am.cancel(p); continue }
-            val t = if (today[i].isAfter(now)) today[i] else tomorrow[i]
+            val t = if (i == 5) (if (sunToday.isAfter(now)) sunToday else sunTomorrow)
+                    else if (today[i].isAfter(now)) today[i] else tomorrow[i]
             setAt(ctx, t.toInstant().toEpochMilli(), p)
         }
 

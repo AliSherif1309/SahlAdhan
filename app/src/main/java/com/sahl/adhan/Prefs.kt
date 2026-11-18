@@ -27,7 +27,8 @@ class Prefs(ctx: Context) {
 
     fun adj(i: Int) = p.getInt("adj$i", 0)
     fun setAdj(i: Int, v: Int) = p.edit().putInt("adj$i", v).apply()
-    fun alert(i: Int) = p.getInt("alert$i", ALERT_FULL)
+    /** i = 0..4 prayers, 5 = sunrise (default: short alert) */
+    fun alert(i: Int) = p.getInt("alert$i", if (i == 5) ALERT_SHORT else ALERT_FULL)
     fun setAlert(i: Int, v: Int) = p.edit().putInt("alert$i", v).apply()
 
     val city get() = PrayerCalc.cities[cityIndex.coerceIn(0, PrayerCalc.cities.lastIndex)]

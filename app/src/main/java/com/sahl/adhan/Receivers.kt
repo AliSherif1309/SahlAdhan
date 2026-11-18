@@ -25,8 +25,11 @@ class AlarmReceiver : BroadcastReceiver() {
     companion object {
         fun title(ctx: Context, prayer: Int): String {
             val c = ctx.localized()
-            return if (prayer < 0) c.getString(R.string.test_title)
-                   else c.getString(R.string.time_for, Names.of(c, prayer))
+            return when {
+                prayer < 0 -> c.getString(R.string.test_title)
+                prayer == 5 -> c.getString(R.string.sunrise_time)
+                else -> c.getString(R.string.time_for, Names.of(c, prayer))
+            }
         }
 
         fun shortAlert(ctx: Context, prayer: Int) {

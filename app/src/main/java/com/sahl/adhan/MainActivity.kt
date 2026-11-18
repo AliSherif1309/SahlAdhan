@@ -25,6 +25,7 @@ import java.util.Locale
 class MainActivity : Activity() {
     private lateinit var prefs: Prefs
     private lateinit var body: LinearLayout
+    private lateinit var scroll: ScrollView
     private val dp get() = resources.displayMetrics.density
     private fun c(id: Int) = getColor(id)
 
@@ -69,7 +70,8 @@ class MainActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             setPadding((16 * dp).toInt(), (16 * dp).toInt(), (16 * dp).toInt(), (32 * dp).toInt())
         }
-        setContentView(ScrollView(this).apply { addView(body) })
+        scroll = ScrollView(this).apply { addView(body) }
+        setContentView(scroll)
     }
 
     private var newer: Updater.Release? = null
@@ -77,7 +79,7 @@ class MainActivity : Activity() {
     private var updateMsg: String? = null
 
     override fun onResume() {
-        super.onResume(); render()
+        super.onResume(); Scheduler.scheduleAll(this); render()
         if (!checked) { checked = true; checkUpdates(false) }
     }
 
@@ -89,6 +91,11 @@ class MainActivity : Activity() {
                 newer = r
                 updateMsg = if (r == null && manual) getString(R.string.up_to_date) else null
                 render()
+                if (manual) {
+                    Toast.makeText(this, if (r != null) getString(R.string.update_available, r.name)
+                                         else getString(R.string.up_to_date), Toast.LENGTH_LONG).show()
+                    if (r != null) scroll.post { scroll.smoothScrollTo(0, 0) }
+                }
             }
         }.start()
     }
@@ -144,7 +151,7 @@ class MainActivity : Activity() {
                 text = getString(R.string.install_update)
                 setOnClickListener {
                     Updater.downloadAndInstall(this@MainActivity, r)
-                    Toast.makeText(this@MainActivity, getString(R.string.downloading), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, getString(R.string.downloading), Toast.LENGTH_LONG).show()
                 }
             })
         }
@@ -180,9 +187,10 @@ class MainActivity : Activity() {
         val aCard = card()
         aCard.addView(text(getString(R.string.alerts), 14f, c(R.color.sub), true))
         val modes = listOf(getString(R.string.alert_full), getString(R.string.alert_short), getString(R.string.alert_off))
-        for (i in 0..4) {
+        for (i in listOf(0, 5, 1, 2, 3, 4)) {
             val row = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
-            row.addView(text(Names.of(this, i), 16f, c(R.color.text)), LinearLayout.LayoutParams(0, -2, 1f))
+            val label = if (i == 5) getString(R.string.sunrise) else Names.of(this, i)
+            row.addView(text(label, 16f, c(R.color.text)), LinearLayout.LayoutParams(0, -2, 1f))
             row.addView(spinner(modes, prefs.alert(i)) { prefs.setAlert(i, it); refreshAll() })
             aCard.addView(row)
         }

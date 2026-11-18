@@ -51,7 +51,8 @@
     <string name="update_available">إصدار جديد متاح: %1$s</string>
     <string name="install_update">حدّث الآن</string>
     <string name="up_to_date">لديك آخر إصدار</string>
-    <string name="downloading">جارٍ تنزيل التحديث…</string>
+    <string name="downloading">يتم التنزيل في المتصفح — اضغط على الملف بعد انتهائه للتثبيت</string>
     <string name="version">الإصدار %1$s</string>
     <string name="checking">جارٍ التحقق…</string>
+    <string name="sunrise_time">حان وقت الشروق</string>
 </resources>
