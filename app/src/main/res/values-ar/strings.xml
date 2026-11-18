@@ -30,4 +30,21 @@
     <string name="time_for">حان وقت صلاة %1$s</string>
     <string name="test_title">تجربة سهل للأذان</string>
     <string name="in_time">بعد</string>
+    <string name="widget_khatmah">سهل للأذان · نمط ختمة</string>
+    <string name="remaining">باق على %1$s</string>
+    <string name="language">اللغة</string>
+    <string name="lang_system">لغة الهاتف</string>
+    <string name="sound_full">صوت الأذان الكامل</string>
+    <string name="sound_short">صوت التنبيه القصير</string>
+    <string name="preview">▶ تشغيل</string>
+    <string name="stop">■ إيقاف</string>
+    <string name="s_adhan_beautiful">الأذان ١ (2:34)</string>
+    <string name="s_adhan_classic">الأذان ٢ (0:42)</string>
+    <string name="s_alarm">صوت منبه الهاتف</string>
+    <string name="s_takbir">التكبير (بداية الأذان)</string>
+    <string name="s_chime_soft">نغمة هادئة</string>
+    <string name="s_chime_double">نغمة مزدوجة</string>
+    <string name="s_system">صوت إشعار الهاتف</string>
+    <string name="stop_adhan">إيقاف</string>
+    <string name="playing">الأذان يعمل</string>
 </resources>

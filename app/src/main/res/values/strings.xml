@@ -30,4 +30,21 @@
     <string name="time_for">Time for %1$s prayer</string>
     <string name="test_title">Sahl Adhan test</string>
     <string name="in_time">in</string>
+    <string name="widget_khatmah">Sahl Adhan · Khatmah style</string>
+    <string name="remaining">Until %1$s</string>
+    <string name="language">Language</string>
+    <string name="lang_system">Phone language</string>
+    <string name="sound_full">Full adhan sound</string>
+    <string name="sound_short">Short alert sound</string>
+    <string name="preview">▶ Play</string>
+    <string name="stop">■ Stop</string>
+    <string name="s_adhan_beautiful">Adhan 1 (2:34)</string>
+    <string name="s_adhan_classic">Adhan 2 (0:42)</string>
+    <string name="s_alarm">Phone alarm sound</string>
+    <string name="s_takbir">Takbir (opening of the adhan)</string>
+    <string name="s_chime_soft">Soft chime</string>
+    <string name="s_chime_double">Double chime</string>
+    <string name="s_system">Phone notification sound</string>
+    <string name="stop_adhan">Stop</string>
+    <string name="playing">Adhan playing</string>
 </resources>

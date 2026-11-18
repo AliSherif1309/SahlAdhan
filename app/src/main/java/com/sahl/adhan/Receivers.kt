@@ -12,28 +12,36 @@ class AlarmReceiver : BroadcastReceiver() {
         if (intent.action == Scheduler.ACTION_ALERT) {
             val prayer = intent.getIntExtra(Scheduler.EXTRA_PRAYER, -1)
             val mode = intent.getIntExtra(Scheduler.EXTRA_MODE, ALERT_SHORT)
-            if (mode != ALERT_OFF) notify(ctx, prayer, mode)
+            when (mode) {
+                ALERT_FULL -> if (!AdhanService.start(ctx, prayer)) shortAlert(ctx, prayer)
+                ALERT_SHORT -> shortAlert(ctx, prayer)
+            }
         }
         Scheduler.scheduleAll(ctx)
         Widgets.updateAll(ctx)
     }
 
-    private fun notify(ctx: Context, prayer: Int, mode: Int) {
-        Scheduler.ensureChannels(ctx)
-        val channel = if (mode == ALERT_FULL) Scheduler.fullChannelId(ctx) else "adhan_short"
-        val title = if (prayer < 0) ctx.getString(R.string.test_title)
-                    else ctx.getString(R.string.time_for, Names.of(ctx, prayer))
-        val open = PendingIntent.getActivity(ctx, 0, Intent(ctx, MainActivity::class.java),
-            PendingIntent.FLAG_IMMUTABLE)
-        val n = Notification.Builder(ctx, channel)
-            .setSmallIcon(R.drawable.ic_moon)
-            .setContentTitle(title)
-            .setContentText(Prefs(ctx).city.let { if (Names.isArabic(ctx)) it.ar else it.en })
-            .setCategory(if (mode == ALERT_FULL) Notification.CATEGORY_ALARM else Notification.CATEGORY_REMINDER)
-            .setContentIntent(open)
-            .setAutoCancel(true)
-            .build()
-        ctx.getSystemService(NotificationManager::class.java).notify(1000 + prayer + 1, n)
+    companion object {
+        fun title(ctx: Context, prayer: Int): String {
+            val c = ctx.localized()
+            return if (prayer < 0) c.getString(R.string.test_title)
+                   else c.getString(R.string.time_for, Names.of(c, prayer))
+        }
+
+        fun shortAlert(ctx: Context, prayer: Int) {
+            Scheduler.ensureChannels(ctx)
+            val c = ctx.localized()
+            val open = PendingIntent.getActivity(ctx, 0, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
+            val n = Notification.Builder(ctx, Scheduler.shortChannelId(ctx))
+                .setSmallIcon(R.drawable.ic_moon)
+                .setContentTitle(title(ctx, prayer))
+                .setContentText(Prefs(ctx).city.let { if (Names.isArabic(c)) it.ar else it.en })
+                .setCategory(Notification.CATEGORY_REMINDER)
+                .setContentIntent(open)
+                .setAutoCancel(true)
+                .build()
+            ctx.getSystemService(NotificationManager::class.java).notify(1000 + prayer + 1, n)
+        }
     }
 }
 

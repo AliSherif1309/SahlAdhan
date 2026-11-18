@@ -7,8 +7,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
-import android.media.RingtoneManager
-import android.net.Uri
 import android.os.Build
 import java.time.ZonedDateTime
 
@@ -69,28 +67,24 @@ object Scheduler {
         setAt(ctx, System.currentTimeMillis() + 60_000, pi(ctx, REQ_TEST + mode, intent))
     }
 
-    /** If you add app/src/main/res/raw/adhan.mp3, it becomes the full adhan sound. */
-    fun fullChannelId(ctx: Context): String {
-        val raw = ctx.resources.getIdentifier("adhan", "raw", ctx.packageName)
-        return if (raw != 0) "adhan_full_file" else "adhan_full_default"
-    }
+    /** Short alerts: one notification channel per sound (Android fixes a channel's sound). */
+    fun shortChannelId(ctx: Context) = "short_" + Prefs(ctx).shortSound
 
     fun ensureChannels(ctx: Context) {
         val nm = ctx.getSystemService(NotificationManager::class.java)
-        val raw = ctx.resources.getIdentifier("adhan", "raw", ctx.packageName)
-        val fullSound: Uri = if (raw != 0) Uri.parse("android.resource://${ctx.packageName}/$raw")
-                             else RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-        val alarmAttrs = AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build()
-        val full = NotificationChannel(fullChannelId(ctx), ctx.getString(R.string.alert_full), NotificationManager.IMPORTANCE_HIGH).apply {
-            setSound(fullSound, alarmAttrs); enableVibration(true); setBypassDnd(true)
+        val c = ctx.localized()
+        val playing = NotificationChannel("adhan_playing", c.getString(R.string.playing), NotificationManager.IMPORTANCE_HIGH).apply {
+            setSound(null, null); enableVibration(true); setBypassDnd(true)
         }
-        val short = NotificationChannel("adhan_short", ctx.getString(R.string.alert_short), NotificationManager.IMPORTANCE_HIGH).apply {
-            setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION),
-                AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build())
+        nm.createNotificationChannel(playing)
+        val key = Prefs(ctx).shortSound
+        val label = Sounds.short.firstOrNull { it.key == key }?.label ?: R.string.alert_short
+        val short = NotificationChannel("short_$key", c.getString(R.string.alert_short) + " · " + c.getString(label),
+            NotificationManager.IMPORTANCE_HIGH).apply {
+            setSound(Sounds.uri(ctx, key), AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build())
             enableVibration(true)
         }
-        nm.createNotificationChannel(full)
         nm.createNotificationChannel(short)
     }
 }

@@ -9,10 +9,12 @@ import kotlin.math.*
 /** Offline prayer-time calculation (standard astronomical formulas, ~1 min accuracy). */
 object PrayerCalc {
     /** ishaMinutes > 0 means Isha = Maghrib + fixed minutes. */
-    data class Method(val name: String, val fajr: Double, val isha: Double, val ishaMinutes: Int)
+    data class Method(val name: String, val fajr: Double, val isha: Double, val ishaMinutes: Int,
+                      /** built-in minute offsets: Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha */
+                      val off: IntArray = IntArray(6))
 
     val methods = listOf(
-        Method("Qatar / Gulf (Fajr 18°, Isha +90 min)", 18.0, 0.0, 90),
+        Method("Qatar (Awqaf / Khatmah)", 18.0, 0.0, 90, intArrayOf(-2, -1, 0, 0, 2, 0)),
         Method("Umm al-Qura (Fajr 18.5°, Isha +90 min)", 18.5, 0.0, 90),
         Method("Muslim World League (18° / 17°)", 18.0, 17.0, 0),
         Method("Egyptian (19.5° / 17.5°)", 19.5, 17.5, 0),
@@ -86,9 +88,12 @@ object PrayerCalc {
             val z = base.plusSeconds(secs).withZoneSameInstant(zone)
             return (if (z.second > 0) z.plusMinutes(1) else z).withSecond(0).withNano(0)
         }
+        val o = m.off
+        // with a fixed Isha interval, Isha follows Maghrib's offset too
+        val ishaOff = o[5] + (if (m.ishaMinutes > 0) o[4] else 0)
         return listOf(
-            toZ(fajr, adj[0]), toZ(sunrise, 0), toZ(dhuhr, adj[1]),
-            toZ(asr, adj[2]), toZ(maghrib, adj[3]), toZ(isha, adj[4])
+            toZ(fajr, o[0] + adj[0]), toZ(sunrise, o[1]), toZ(dhuhr, o[2] + adj[1]),
+            toZ(asr, o[3] + adj[2]), toZ(maghrib, o[4] + adj[3]), toZ(isha, ishaOff + adj[4])
         )
     }
 

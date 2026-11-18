@@ -3,7 +3,10 @@ package com.sahl.adhan
 import android.Manifest
 import android.app.Activity
 import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
+import android.media.MediaPlayer
 import android.content.pm.PackageManager
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -24,6 +27,39 @@ class MainActivity : Activity() {
     private lateinit var body: LinearLayout
     private val dp get() = resources.displayMetrics.density
     private fun c(id: Int) = getColor(id)
+
+    private var preview: MediaPlayer? = null
+    private val font by lazy { try { resources.getFont(R.font.thmanyah) } catch (e: Exception) { null } }
+
+    override fun attachBaseContext(newBase: Context) { super.attachBaseContext(newBase.localized()) }
+
+    override fun onPause() { super.onPause(); stopPreview() }
+
+    private fun stopPreview() { preview?.release(); preview = null }
+
+    private fun play(key: String) {
+        stopPreview()
+        preview = try {
+            MediaPlayer().apply {
+                setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).build())
+                setDataSource(this@MainActivity, Sounds.uri(this@MainActivity, key))
+                setOnCompletionListener { stopPreview() }
+                prepare(); start()
+            }
+        } catch (e: Exception) { null }
+    }
+
+    private fun soundPicker(parent: LinearLayout, title: Int, list: List<Sounds.Sound>, current: String, save: (String) -> Unit) {
+        parent.addView(text(getString(title), 13f, c(R.color.text)).apply { setPadding(0, (8 * dp).toInt(), 0, 0) })
+        val avail = Sounds.available(this, list)
+        val row = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
+        val sel = avail.indexOfFirst { it.key == current }.coerceAtLeast(0)
+        row.addView(spinner(avail.map { getString(it.label) }, sel) { save(avail[it].key); refreshAll() },
+            LinearLayout.LayoutParams(0, -2, 1f))
+        row.addView(Button(this).apply { text = getString(R.string.preview); setOnClickListener { play(avail[sel].key) } })
+        row.addView(Button(this).apply { text = getString(R.string.stop); setOnClickListener { stopPreview() } })
+        parent.addView(row)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,7 +85,7 @@ class MainActivity : Activity() {
     }
 
     private fun text(s: String, size: Float, color: Int, bold: Boolean = false) = TextView(this).apply {
-        text = s; textSize = size; setTextColor(color); if (bold) setTypeface(typeface, Typeface.BOLD)
+        text = s; textSize = size; setTextColor(color); setTypeface(font ?: typeface, if (bold) Typeface.BOLD else Typeface.NORMAL)
     }
 
     private fun spinner(items: List<String>, selected: Int, onPick: (Int) -> Unit) = Spinner(this).apply {
@@ -66,7 +102,7 @@ class MainActivity : Activity() {
         val ar = Names.isArabic(this)
         val now = ZonedDateTime.now(prefs.zone)
         val (nextI, nextT) = prefs.next(now)
-        val loc = Locale.getDefault()
+        val loc = resources.configuration.locales[0]
 
         // Header
         val header = LinearLayout(this).apply {
@@ -79,7 +115,7 @@ class MainActivity : Activity() {
         header.addView(text(getString(R.string.app_name), 15f, c(R.color.gold), true))
         header.addView(text(now.format(DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", loc)), 14f, 0xFFFFFFFF.toInt()))
         header.addView(text(HijrahDate.from(now).format(DateTimeFormatter.ofPattern("d MMMM yyyy", loc)), 13f, 0xFFCFE3DC.toInt()))
-        header.addView(text("${getString(R.string.next)}: ${Names.of(this, nextI)}  ${Widgets.fmt(this, nextT)}", 22f, 0xFFFFFFFF.toInt(), true).apply { setPadding(0, (8 * dp).toInt(), 0, 0) })
+        header.addView(text("${getString(R.string.next)}: ${Names.of(this, nextI)}  ${Widgets.fmt(nextT)}", 22f, 0xFFFFFFFF.toInt(), true).apply { setPadding(0, (8 * dp).toInt(), 0, 0) })
 
         // Today's times
         val times = prefs.times(now.toLocalDate())
@@ -91,9 +127,17 @@ class MainActivity : Activity() {
             val row = LinearLayout(this).apply { setPadding(0, (8 * dp).toInt(), 0, (8 * dp).toInt()) }
             val color = if (isNext) c(R.color.emerald) else c(R.color.text)
             row.addView(text(getString(labels[k]), 17f, color, isNext), LinearLayout.LayoutParams(0, -2, 1f))
-            row.addView(text(Widgets.fmt(this, t), 17f, color, true))
+            row.addView(text(Widgets.fmt(t), 17f, color, true))
             tCard.addView(row)
         }
+
+        // Language
+        val langCard = card()
+        langCard.addView(text(getString(R.string.language), 14f, c(R.color.sub), true))
+        val langs = listOf("ar", "en", "system")
+        langCard.addView(spinner(listOf("العربية", "English", getString(R.string.lang_system)), langs.indexOf(prefs.lang).coerceAtLeast(0)) {
+            prefs.lang = langs[it]; Widgets.updateAll(this); recreate()
+        })
 
         // City
         val cityCard = card()
@@ -122,6 +166,8 @@ class MainActivity : Activity() {
         }
         status.setPadding(0, (10 * dp).toInt(), 0, (6 * dp).toInt())
         aCard.addView(status)
+        soundPicker(aCard, R.string.sound_full, Sounds.full, prefs.fullSound) { prefs.fullSound = it }
+        soundPicker(aCard, R.string.sound_short, Sounds.short, prefs.shortSound) { prefs.shortSound = it }
         aCard.addView(Button(this).apply { text = getString(R.string.test_full); setOnClickListener { test(ALERT_FULL) } })
         aCard.addView(Button(this).apply { text = getString(R.string.test_short); setOnClickListener { test(ALERT_SHORT) } })
         aCard.addView(text(getString(R.string.battery_tip), 12f, c(R.color.sub)).apply {
