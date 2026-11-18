@@ -14,16 +14,16 @@ jobs:
             unzip -o SahlAdhan.zip
             if [ -d SahlAdhan ]; then cp -r SahlAdhan/. . ; fi
           fi
-      # Public-domain (CC0) adhan recordings from Wikimedia Commons
+      # Public-domain (CC0) adhan recordings, originally from Wikimedia Commons:
+      #   "Beautiful adhan.ogg" (Adam-synagda) and "Adhan.ogg"
       - name: Download adhan sounds
         run: |
           RAW=app/src/main/res/raw; mkdir -p $RAW
-          UA="SahlAdhan-build/1.0 (https://github.com/AliSherif1309/SahlAdhan)"
-          curl -fsSL -A "$UA" -o $RAW/adhan_beautiful.ogg "https://commons.wikimedia.org/wiki/Special:FilePath/Beautiful_adhan.ogg" || rm -f $RAW/adhan_beautiful.ogg
-          curl -fsSL -A "$UA" -o $RAW/adhan_classic.ogg "https://commons.wikimedia.org/wiki/Special:FilePath/Adhan.ogg" || rm -f $RAW/adhan_classic.ogg
-          if [ -f $RAW/adhan_classic.ogg ]; then
-            ffmpeg -loglevel error -y -i $RAW/adhan_classic.ogg -t 10 -af "volume=6dB,afade=t=out:st=7:d=3" -c:a libvorbis $RAW/takbir.ogg || rm -f $RAW/takbir.ogg
-          fi
+          SRC=https://raw.githubusercontent.com/rahmanSaaed/qibla-mobile/HEAD/assets/sounds
+          curl -fSL --retry 3 -o $RAW/adhan_beautiful.ogg $SRC/adhan_full.ogg
+          curl -fSL --retry 3 -o $RAW/adhan_classic.ogg $SRC/adhan_short.ogg
+          sudo apt-get install -y -qq ffmpeg > /dev/null
+          ffmpeg -loglevel error -y -i $RAW/adhan_classic.ogg -t 10 -af "afade=t=out:st=7:d=3" -c:a libvorbis $RAW/takbir.ogg
           ls -la $RAW
       - uses: actions/setup-java@v4
         with:
