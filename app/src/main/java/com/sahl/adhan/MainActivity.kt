@@ -72,7 +72,26 @@ class MainActivity : Activity() {
         setContentView(ScrollView(this).apply { addView(body) })
     }
 
-    override fun onResume() { super.onResume(); render() }
+    private var newer: Updater.Release? = null
+    private var checked = false
+    private var updateMsg: String? = null
+
+    override fun onResume() {
+        super.onResume(); render()
+        if (!checked) { checked = true; checkUpdates(false) }
+    }
+
+    private fun checkUpdates(manual: Boolean) {
+        if (manual) { updateMsg = getString(R.string.checking); render() }
+        Thread {
+            val r = Updater.fetchNewer()
+            runOnUiThread {
+                newer = r
+                updateMsg = if (r == null && manual) getString(R.string.up_to_date) else null
+                render()
+            }
+        }.start()
+    }
 
     private fun refreshAll() { Scheduler.scheduleAll(this); Widgets.updateAll(this); render() }
 
@@ -116,6 +135,19 @@ class MainActivity : Activity() {
         header.addView(text(now.format(DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", loc)), 14f, 0xFFFFFFFF.toInt()))
         header.addView(text(HijrahDate.from(now).format(DateTimeFormatter.ofPattern("d MMMM yyyy", loc)), 13f, 0xFFCFE3DC.toInt()))
         header.addView(text("${getString(R.string.next)}: ${Names.of(this, nextI)}  ${Widgets.fmt(nextT)}", 22f, 0xFFFFFFFF.toInt(), true).apply { setPadding(0, (8 * dp).toInt(), 0, 0) })
+
+        newer?.let { r ->
+            val u = card()
+            u.addView(text(getString(R.string.update_available, r.name), 16f, c(R.color.emerald), true))
+            if (r.notes.isNotBlank()) u.addView(text(r.notes, 13f, c(R.color.sub)))
+            u.addView(Button(this).apply {
+                text = getString(R.string.install_update)
+                setOnClickListener {
+                    Updater.downloadAndInstall(this@MainActivity, r)
+                    Toast.makeText(this@MainActivity, getString(R.string.downloading), Toast.LENGTH_SHORT).show()
+                }
+            })
+        }
 
         // Today's times
         val times = prefs.times(now.toLocalDate())
@@ -190,6 +222,12 @@ class MainActivity : Activity() {
             row.addView(spinner(range.map { if (it > 0) "+$it" else "$it" }, range.indexOf(prefs.adj(i))) { prefs.setAdj(i, range[it]); refreshAll() })
             sCard.addView(row)
         }
+
+        // Version and updates
+        val vCard = card()
+        vCard.addView(text(getString(R.string.version, BuildConfig.VERSION_NAME), 14f, c(R.color.sub), true))
+        updateMsg?.let { vCard.addView(text(it, 13f, c(R.color.text))) }
+        vCard.addView(Button(this).apply { text = getString(R.string.check_updates); setOnClickListener { checkUpdates(true) } })
     }
 
     private fun askNotif() {

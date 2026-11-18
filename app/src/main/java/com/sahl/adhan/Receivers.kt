@@ -19,6 +19,7 @@ class AlarmReceiver : BroadcastReceiver() {
         }
         Scheduler.scheduleAll(ctx)
         Widgets.updateAll(ctx)
+        Updater.dailyCheck(ctx)
     }
 
     companion object {

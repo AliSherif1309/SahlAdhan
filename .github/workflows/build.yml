@@ -1,19 +1,15 @@
-name: Build Sahl Adhan APK
+name: Build and release Sahl Adhan
 on:
   push:
+    branches: [main]
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # If you uploaded the project as SahlAdhan.zip, unpack it first
-      - name: Unpack zip if present
-        run: |
-          if [ -f SahlAdhan.zip ] && [ ! -f settings.gradle.kts ]; then
-            unzip -o SahlAdhan.zip
-            if [ -d SahlAdhan ]; then cp -r SahlAdhan/. . ; fi
-          fi
       # Public-domain (CC0) adhan recordings, originally from Wikimedia Commons:
       #   "Beautiful adhan.ogg" (Adam-synagda) and "Adhan.ogg"
       - name: Download adhan sounds
@@ -24,7 +20,13 @@ jobs:
           curl -fSL --retry 3 -o $RAW/adhan_classic.ogg $SRC/adhan_short.ogg
           sudo apt-get install -y -qq ffmpeg > /dev/null
           ffmpeg -loglevel error -y -i $RAW/adhan_classic.ogg -t 10 -af "afade=t=out:st=7:d=3" -c:a libvorbis $RAW/takbir.ogg
-          ls -la $RAW
+      - name: Restore signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then echo "::error::Add the KEYSTORE_B64 and KEYSTORE_PASS secrets first"; exit 1; fi
+          echo "$KEYSTORE_B64" | base64 -d > $RUNNER_TEMP/release.keystore
+          echo "KEYSTORE_FILE=$RUNNER_TEMP/release.keystore" >> $GITHUB_ENV
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -33,7 +35,14 @@ jobs:
         with:
           gradle-version: "8.9"
       - run: gradle assembleRelease --no-daemon
-      - uses: actions/upload-artifact@v4
+        env:
+          KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
+      - name: Name the APK
+        run: cp app/build/outputs/apk/release/*.apk SahlAdhan-v1.${{ github.run_number }}.apk
+      - uses: softprops/action-gh-release@v2
         with:
-          name: SahlAdhan-apk
-          path: app/build/outputs/apk/release/*.apk
+          tag_name: v1.${{ github.run_number }}
+          name: Sahl Adhan v1.${{ github.run_number }}
+          body: ${{ github.event.head_commit.message }}
+          files: SahlAdhan-v1.${{ github.run_number }}.apk
+          make_latest: true

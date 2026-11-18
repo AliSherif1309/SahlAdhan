@@ -47,4 +47,11 @@
     <string name="s_system">صوت إشعار الهاتف</string>
     <string name="stop_adhan">إيقاف</string>
     <string name="playing">الأذان يعمل</string>
+    <string name="check_updates">التحقق من التحديثات</string>
+    <string name="update_available">إصدار جديد متاح: %1$s</string>
+    <string name="install_update">حدّث الآن</string>
+    <string name="up_to_date">لديك آخر إصدار</string>
+    <string name="downloading">جارٍ تنزيل التحديث…</string>
+    <string name="version">الإصدار %1$s</string>
+    <string name="checking">جارٍ التحقق…</string>
 </resources>

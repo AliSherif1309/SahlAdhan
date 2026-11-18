@@ -9,22 +9,28 @@ android {
         applicationId = "com.sahl.adhan"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.1"
+        // GitHub Actions run number becomes the version, so every release is newer
+        val run = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInt()
+        versionCode = run
+        versionName = "1.$run"
     }
-    // Fixed key so every new build installs over the old one
+    // Release key comes from GitHub secrets (never stored in the repo)
+    val ks = System.getenv("KEYSTORE_FILE")
     signingConfigs {
-        create("sahl") {
-            storeFile = file("sahl.keystore")
-            storePassword = "sahl1234"
+        if (ks != null) create("sahl") {
+            storeFile = file(ks)
+            storePassword = System.getenv("KEYSTORE_PASS")
             keyAlias = "sahl"
-            keyPassword = "sahl1234"
+            keyPassword = System.getenv("KEYSTORE_PASS")
         }
     }
     buildTypes {
-        getByName("debug") { signingConfig = signingConfigs.getByName("sahl") }
-        getByName("release") { isMinifyEnabled = false; signingConfig = signingConfigs.getByName("sahl") }
+        getByName("release") {
+            isMinifyEnabled = false
+            signingConfig = if (ks != null) signingConfigs.getByName("sahl") else signingConfigs.getByName("debug")
+        }
     }
+    buildFeatures { buildConfig = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     kotlinOptions { jvmTarget = "17" }
 }
