@@ -47,22 +47,7 @@ The first time, Android asks you to allow Sahl Adhan to install apps.
 
 ## How releases work
 
-Every push to `main` runs [`build.yml`](.github/workflows/build.yml), which:
-
-1. Downloads the CC0 adhan recordings and makes the Takbir clip with ffmpeg
-2. Builds the APK, signed with the release key from repository secrets
-3. Publishes a GitHub Release tagged **`v1.<run number>`** with the APK attached
-
-The run number is also the app's `versionCode`, so every release counts as newer than the last.
-
-**Required secrets** (Settings › Secrets and variables › Actions):
-
-| Secret | Value |
-|---|---|
-| `KEYSTORE_B64` | The release keystore, base64-encoded |
-| `KEYSTORE_PASS` | The keystore and key password |
-
-> ⚠️ Never commit the keystore. If it's lost, new versions can't install over the existing app.
+Every push to `main` builds the app and publishes a new release with the APK attached, so the app always finds the newest version.
 
 ## Project layout
 
