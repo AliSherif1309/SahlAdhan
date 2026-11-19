@@ -239,6 +239,18 @@ class MainActivity : Activity() {
             setOnClickListener { startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))) }
         })
 
+        // Widget and banner options
+        val oCard = card()
+        oCard.addView(text(getString(R.string.widget_options), 14f, c(R.color.sub), true))
+        fun optSwitch(key: String, label: Int) = oCard.addView(Switch(this).apply {
+            text = getString(label); textSize = 15f; setTextColor(c(R.color.text)); font?.let { typeface = it }
+            isChecked = prefs.opt(key); setPadding(0, (6 * dp).toInt(), 0, (6 * dp).toInt())
+            setOnCheckedChangeListener { _, on -> prefs.setOpt(key, on); Widgets.updateAll(this@MainActivity) }
+        })
+        Options.widget.forEach { (k, l) -> optSwitch(k, l) }
+        oCard.addView(text(getString(R.string.banner_options), 14f, c(R.color.sub), true).apply { setPadding(0, (12 * dp).toInt(), 0, 0) })
+        Options.banner.forEach { (k, l) -> optSwitch(k, l) }
+
         // Calculation settings
         val sCard = card()
         sCard.addView(text(getString(R.string.settings), 14f, c(R.color.sub), true))

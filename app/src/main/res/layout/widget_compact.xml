@@ -4,6 +4,8 @@
     android:background="@drawable/widget_bg">
     <TextView android:fontFamily="@font/thmanyah" android:id="@+id/hijri" android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:textColor="#D9FFFFFF" android:textSize="11sp" android:maxLines="1"/>
+    <TextView android:fontFamily="@font/thmanyah" android:id="@+id/extra" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:textColor="#B3FFFFFF" android:textSize="10sp" android:maxLines="1"/>
     <TextView android:fontFamily="@font/thmanyah" android:id="@+id/label" android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:textColor="@color/gold" android:textSize="13sp" android:text="@string/next"/>
     <TextView android:fontFamily="@font/thmanyah" android:id="@+id/name" android:layout_width="wrap_content" android:layout_height="wrap_content"

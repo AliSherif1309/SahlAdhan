@@ -69,4 +69,15 @@
     <string name="next_card">التالي ←</string>
     <string name="remaining_times">اضغط للعدّ · باقي %1$d</string>
     <string name="done_next">البطاقة التالية ←</string>
+    <string name="widget_options">الويدجت: ماذا يظهر</string>
+    <string name="banner_options">الشريط: ماذا يظهر</string>
+    <string name="o_hijri">التاريخ الهجري</string>
+    <string name="o_date">التاريخ الميلادي</string>
+    <string name="o_city">اسم المدينة</string>
+    <string name="o_countdown">العد التنازلي</string>
+    <string name="o_sunrise">سطر الشروق</string>
+    <string name="o_qibla">زر القبلة</string>
+    <string name="o_b_times">مواقيت اليوم كاملة (عند التوسيع)</string>
+    <string name="o_b_after">الصلاة التي بعدها</string>
+    <string name="then">ثم</string>
 </resources>

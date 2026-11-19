@@ -25,12 +25,38 @@ object Banner {
             setSound(null, null); enableVibration(false); setShowBadge(false)
         })
         val (i, t) = prefs.next()
+        val day = t.toLocalDate()
+        val name = Names.of(c, i, day)
+        val city = prefs.city.let { if (Names.isArabic(c)) it.ar else it.en }
+        // Collapsed line: time · city · hijri
+        val line = buildList {
+            add(Widgets.fmt2(t)); add(city)
+            if (prefs.opt("b_hijri")) add(Widgets.hijri(c, java.time.LocalDate.now(prefs.zone)))
+        }.joinToString(" · ")
+        // Expanded: the prayer after next, then the whole day's timetable with the next one marked
+        val big = StringBuilder(line)
+        if (prefs.opt("b_after")) {
+            val after = if (i < 4) Names.of(c, i + 1, day) + " " + Widgets.fmt2(prefs.fard(day)[i + 1])
+                        else c.getString(R.string.fajr) + " " + Widgets.fmt2(prefs.fard(day.plusDays(1))[0])
+            big.append("\n").append(c.getString(R.string.then)).append(": ").append(after)
+        }
+        if (prefs.opt("b_times")) {
+            val all = prefs.times(day)
+            val labels = intArrayOf(R.string.fajr, R.string.sunrise, R.string.dhuhr, R.string.asr, R.string.maghrib, R.string.isha)
+            val nextRow = intArrayOf(0, 2, 3, 4, 5)[i]
+            big.append("\n")
+            for (r in 0..5) {
+                val n = if (r == 2) Names.of(c, 1, day) else c.getString(labels[r])
+                big.append("\n").append(if (r == nextRow) "▸ " else "   ").append(n).append("  ").append(Widgets.fmt2(all[r]))
+            }
+        }
         val open = PendingIntent.getActivity(ctx, 2, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
         val n = Notification.Builder(ctx, CHANNEL)
             .setSmallIcon(R.drawable.ic_moon)
-            .setContentTitle(Names.of(c, i, t.toLocalDate()))
-            .setContentText(Widgets.fmt2(t))
-            .setSubText(c.getString(R.string.remaining, Names.of(c, i, t.toLocalDate())))
+            .setContentTitle(name)
+            .setContentText(line)
+            .setStyle(Notification.BigTextStyle().bigText(big.toString()))
+            .setSubText(c.getString(R.string.remaining, name))
             .setWhen(t.toInstant().toEpochMilli())
             .setShowWhen(true)
             .setUsesChronometer(true)

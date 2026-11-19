@@ -69,4 +69,15 @@
     <string name="next_card">Next ←</string>
     <string name="remaining_times">Tap to count · %1$d left</string>
     <string name="done_next">Next card ←</string>
+    <string name="widget_options">Widget: what to show</string>
+    <string name="banner_options">Banner: what to show</string>
+    <string name="o_hijri">Hijri date</string>
+    <string name="o_date">Gregorian date</string>
+    <string name="o_city">City name</string>
+    <string name="o_countdown">Countdown</string>
+    <string name="o_sunrise">Sunrise row</string>
+    <string name="o_qibla">Qibla button</string>
+    <string name="o_b_times">All of today\'s times (expanded)</string>
+    <string name="o_b_after">The prayer after next</string>
+    <string name="then">Then</string>
 </resources>

@@ -25,6 +25,19 @@ object Widgets {
         return java.time.chrono.HijrahDate.from(day).format(DateTimeFormatter.ofPattern("d MMMM yyyy", loc))
     }
 
+    fun gregorian(c: Context, day: java.time.LocalDate): String =
+        day.format(DateTimeFormatter.ofPattern("EEEE d MMMM", c.resources.configuration.locales[0]))
+
+    /** Extra line from the options: Gregorian date and/or city */
+    fun extraLine(c: Context, prefs: Prefs, day: java.time.LocalDate): String {
+        val parts = mutableListOf<String>()
+        if (prefs.opt("date")) parts += gregorian(c, day)
+        if (prefs.opt("city")) parts += prefs.city.let { if (Names.isArabic(c)) it.ar else it.en }
+        return parts.joinToString(" · ")
+    }
+
+    private fun vis(on: Boolean) = if (on) android.view.View.VISIBLE else android.view.View.GONE
+
     private fun openQibla(ctx: Context) = PendingIntent.getActivity(
         ctx, 3, Qibla.intent(ctx), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
@@ -42,7 +55,11 @@ object Widgets {
         val (i, t) = Prefs(ctx).next()
         val v = RemoteViews(ctx.packageName, R.layout.widget_compact)
         v.setTextViewText(R.id.label, c.getString(R.string.next))
-        v.setTextViewText(R.id.hijri, hijri(c, java.time.LocalDate.now(Prefs(ctx).zone)))
+        val pr = Prefs(ctx); val today = java.time.LocalDate.now(pr.zone)
+        v.setTextViewText(R.id.hijri, hijri(c, today)); v.setViewVisibility(R.id.hijri, vis(pr.opt("hijri")))
+        val ex = extraLine(c, pr, today)
+        v.setTextViewText(R.id.extra, ex); v.setViewVisibility(R.id.extra, vis(ex.isNotEmpty()))
+        v.setViewVisibility(R.id.countdown, vis(pr.opt("countdown")))
         v.setTextViewText(R.id.name, Names.of(c, i, t.toLocalDate()))
         v.setTextViewText(R.id.time, fmt(t))
         countdown(v, R.id.countdown, t)
@@ -102,6 +119,12 @@ object Widgets {
         v.setTextViewText(R.id.remain, c.getString(R.string.remaining, Names.of(c, next, nextT.toLocalDate())))
         countdown(v, R.id.countdown, nextT)
         v.setTextViewText(R.id.hijri, hijri(c, now.toLocalDate()))
+        v.setViewVisibility(R.id.hijri, vis(prefs.opt("hijri")))
+        val ex = extraLine(c, prefs, now.toLocalDate())
+        v.setTextViewText(R.id.extra, ex); v.setViewVisibility(R.id.extra, vis(ex.isNotEmpty()))
+        v.setViewVisibility(R.id.countdown, vis(prefs.opt("countdown")))
+        v.setViewVisibility(R.id.row1, vis(prefs.opt("sunrise")))
+        v.setViewVisibility(R.id.qibla, vis(prefs.opt("qibla")))
         v.setOnClickPendingIntent(R.id.root, openApp(ctx))
         v.setOnClickPendingIntent(R.id.qibla, openQibla(ctx))
         return v

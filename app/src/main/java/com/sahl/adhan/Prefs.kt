@@ -27,6 +27,10 @@ class Prefs(ctx: Context) {
 
     var showBanner: Boolean get() = p.getBoolean("banner", true); set(v) = p.edit().putBoolean("banner", v).apply()
 
+    /** Widget / banner display options (key → default) */
+    fun opt(key: String) = p.getBoolean("opt_$key", Options.defaults[key] ?: true)
+    fun setOpt(key: String, v: Boolean) = p.edit().putBoolean("opt_$key", v).apply()
+
     fun adj(i: Int) = p.getInt("adj$i", 0)
     fun setAdj(i: Int, v: Int) = p.edit().putInt("adj$i", v).apply()
     /** i = 0..4 prayers, 5 = sunrise, 6 = first Friday adhan (default: short alert) */
@@ -104,4 +108,17 @@ object Sounds {
             else -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
         }
     }
+}
+
+/** What the widgets and banner can show. Order = order on the settings screen. */
+object Options {
+    val widget = listOf(
+        "hijri" to R.string.o_hijri, "date" to R.string.o_date, "city" to R.string.o_city,
+        "countdown" to R.string.o_countdown, "sunrise" to R.string.o_sunrise, "qibla" to R.string.o_qibla,
+    )
+    val banner = listOf(
+        "b_times" to R.string.o_b_times, "b_hijri" to R.string.o_hijri, "b_after" to R.string.o_b_after,
+    )
+    val defaults = mapOf("hijri" to true, "date" to false, "city" to false, "countdown" to true,
+        "sunrise" to true, "qibla" to true, "b_times" to true, "b_hijri" to true, "b_after" to true)
 }
