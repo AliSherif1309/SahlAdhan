@@ -65,4 +65,8 @@
     <string name="ruqyah_sunnah">From the Sunnah</string>
     <string name="ruqyah_quran">From the Quran</string>
     <string name="times">%1$d times</string>
+    <string name="prev_card">→ Previous</string>
+    <string name="next_card">Next ←</string>
+    <string name="remaining_times">Tap to count · %1$d left</string>
+    <string name="done_next">Next card ←</string>
 </resources>
