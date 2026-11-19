@@ -29,8 +29,8 @@ class Prefs(ctx: Context) {
 
     fun adj(i: Int) = p.getInt("adj$i", 0)
     fun setAdj(i: Int, v: Int) = p.edit().putInt("adj$i", v).apply()
-    /** i = 0..4 prayers, 5 = sunrise (default: short alert) */
-    fun alert(i: Int) = p.getInt("alert$i", if (i == 5) ALERT_SHORT else ALERT_FULL)
+    /** i = 0..4 prayers, 5 = sunrise, 6 = first Friday adhan (default: short alert) */
+    fun alert(i: Int) = p.getInt("alert$i", if (i >= 5) ALERT_SHORT else ALERT_FULL)
     fun setAlert(i: Int, v: Int) = p.edit().putInt("alert$i", v).apply()
 
     val city get() = PrayerCalc.cities[cityIndex.coerceIn(0, PrayerCalc.cities.lastIndex)]
@@ -45,6 +45,13 @@ class Prefs(ctx: Context) {
     fun fard(date: LocalDate) = times(date).let { listOf(it[0], it[2], it[3], it[4], it[5]) }
 
     /** Next prayer from now: (prayer index 0..4, time). After Isha → tomorrow's Fajr. */
+    /** First Friday adhan (40 min before Dhuhr) of the next Friday on or after [from]'s date */
+    fun firstAdhan(from: ZonedDateTime): ZonedDateTime {
+        var d = from.toLocalDate()
+        while (d.dayOfWeek != java.time.DayOfWeek.FRIDAY) d = d.plusDays(1)
+        return fard(d)[1].minusMinutes(40)
+    }
+
     fun next(now: ZonedDateTime = ZonedDateTime.now(zone)): Pair<Int, ZonedDateTime> {
         val today = fard(now.toLocalDate())
         today.forEachIndexed { i, t -> if (t.isAfter(now)) return i to t }
@@ -64,6 +71,9 @@ fun Context.localized(): Context {
 object Names {
     val ids = intArrayOf(R.string.fajr, R.string.dhuhr, R.string.asr, R.string.maghrib, R.string.isha)
     fun of(ctx: Context, i: Int) = ctx.getString(ids[i])
+    /** Same as [of] but Dhuhr becomes الجمعة on Fridays */
+    fun of(ctx: Context, i: Int, day: java.time.LocalDate) =
+        if (i == 1 && day.dayOfWeek == java.time.DayOfWeek.FRIDAY) ctx.getString(R.string.jumuah) else of(ctx, i)
     fun isArabic(ctx: Context) = ctx.resources.configuration.locales[0].language == "ar"
 }
 

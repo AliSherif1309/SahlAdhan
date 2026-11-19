@@ -141,7 +141,7 @@ class MainActivity : Activity() {
         header.addView(text(getString(R.string.app_name), 15f, c(R.color.gold), true))
         header.addView(text(now.format(DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", loc)), 14f, 0xFFFFFFFF.toInt()))
         header.addView(text(HijrahDate.from(now).format(DateTimeFormatter.ofPattern("d MMMM yyyy", loc)), 13f, 0xFFCFE3DC.toInt()))
-        header.addView(text("${getString(R.string.next)}: ${Names.of(this, nextI)}  ${Widgets.fmt(nextT)}", 22f, 0xFFFFFFFF.toInt(), true).apply { setPadding(0, (8 * dp).toInt(), 0, 0) })
+        header.addView(text("${getString(R.string.next)}: ${Names.of(this, nextI, nextT.toLocalDate())}  ${Widgets.fmt(nextT)}", 22f, 0xFFFFFFFF.toInt(), true).apply { setPadding(0, (8 * dp).toInt(), 0, 0) })
 
         newer?.let { r ->
             val u = card()
@@ -165,8 +165,18 @@ class MainActivity : Activity() {
             val isNext = fardIndex == nextI && nextT.toLocalDate() == now.toLocalDate()
             val row = LinearLayout(this).apply { setPadding(0, (8 * dp).toInt(), 0, (8 * dp).toInt()) }
             val color = if (isNext) c(R.color.emerald) else c(R.color.text)
-            row.addView(text(getString(labels[k]), 17f, color, isNext), LinearLayout.LayoutParams(0, -2, 1f))
+            val name = if (k == 2) Names.of(this, 1, now.toLocalDate()) else getString(labels[k])
+            row.addView(text(name, 17f, color, isNext), LinearLayout.LayoutParams(0, -2, 1f))
             row.addView(text(Widgets.fmt(t), 17f, color, true))
+            tCard.addView(row)
+        }
+        // First Friday adhan: shown on Thursday and Friday
+        val dow = now.dayOfWeek
+        if (dow == java.time.DayOfWeek.THURSDAY || dow == java.time.DayOfWeek.FRIDAY) {
+            val fa = prefs.firstAdhan(now)
+            val row = LinearLayout(this).apply { setPadding(0, (8 * dp).toInt(), 0, (8 * dp).toInt()) }
+            row.addView(text(getString(R.string.first_adhan), 17f, c(R.color.gold), true), LinearLayout.LayoutParams(0, -2, 1f))
+            row.addView(text(Widgets.fmt(fa), 17f, c(R.color.gold), true))
             tCard.addView(row)
         }
 
@@ -187,9 +197,9 @@ class MainActivity : Activity() {
         val aCard = card()
         aCard.addView(text(getString(R.string.alerts), 14f, c(R.color.sub), true))
         val modes = listOf(getString(R.string.alert_full), getString(R.string.alert_short), getString(R.string.alert_off))
-        for (i in listOf(0, 5, 1, 2, 3, 4)) {
+        for (i in listOf(0, 5, 6, 1, 2, 3, 4)) {
             val row = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
-            val label = if (i == 5) getString(R.string.sunrise) else Names.of(this, i)
+            val label = when (i) { 5 -> getString(R.string.sunrise); 6 -> getString(R.string.first_adhan); else -> Names.of(this, i) }
             row.addView(text(label, 16f, c(R.color.text)), LinearLayout.LayoutParams(0, -2, 1f))
             row.addView(spinner(modes, prefs.alert(i)) { prefs.setAlert(i, it); refreshAll() })
             aCard.addView(row)

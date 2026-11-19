@@ -57,4 +57,6 @@
     <string name="sunrise_time">Sunrise time</string>
     <string name="banner">Next prayer banner</string>
     <string name="banner_switch">Show next prayer in notifications</string>
+    <string name="jumuah">Jumuah</string>
+    <string name="first_adhan">First Friday adhan</string>
 </resources>

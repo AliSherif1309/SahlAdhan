@@ -33,7 +33,7 @@ object Widgets {
         val (i, t) = Prefs(ctx).next()
         val v = RemoteViews(ctx.packageName, R.layout.widget_compact)
         v.setTextViewText(R.id.label, c.getString(R.string.next))
-        v.setTextViewText(R.id.name, Names.of(c, i))
+        v.setTextViewText(R.id.name, Names.of(c, i, t.toLocalDate()))
         v.setTextViewText(R.id.time, fmt(t))
         countdown(v, R.id.countdown, t)
         v.setOnClickPendingIntent(R.id.root, openApp(ctx))
@@ -49,7 +49,8 @@ object Widgets {
         val prefs = Prefs(ctx)
         val now = ZonedDateTime.now(prefs.zone)
         val (next, nextT) = prefs.next(now)
-        val times = prefs.fard(shownDay(prefs, now, nextT))
+        val day = shownDay(prefs, now, nextT)
+        val times = prefs.fard(day)
         val ar = Names.isArabic(c)
         val v = RemoteViews(ctx.packageName, R.layout.widget_wide)
         val cells = intArrayOf(R.id.cell0, R.id.cell1, R.id.cell2, R.id.cell3, R.id.cell4)
@@ -57,7 +58,7 @@ object Widgets {
         val ts = intArrayOf(R.id.t0, R.id.t1, R.id.t2, R.id.t3, R.id.t4)
         for (slot in 0..4) {
             val k = if (ar) 4 - slot else slot   // Arabic reads right to left: Fajr on the right
-            v.setTextViewText(ns[slot], Names.of(c, k))
+            v.setTextViewText(ns[slot], Names.of(c, k, day))
             v.setTextViewText(ts[slot], fmt(times[k]))
             v.setInt(cells[slot], "setBackgroundResource", if (k == next) R.drawable.cell_hi else R.drawable.cell_none)
             v.setTextColor(ts[slot], if (k == next) GOLD else WHITE)
@@ -72,7 +73,8 @@ object Widgets {
         val prefs = Prefs(ctx)
         val now = ZonedDateTime.now(prefs.zone)
         val (next, nextT) = prefs.next(now)
-        val all = prefs.times(shownDay(prefs, now, nextT))
+        val day = shownDay(prefs, now, nextT)
+        val all = prefs.times(day)
         val ar = Names.isArabic(c)
         val labels = intArrayOf(R.string.fajr, R.string.sunrise, R.string.dhuhr, R.string.asr, R.string.maghrib, R.string.isha)
         val nextRow = intArrayOf(0, 2, 3, 4, 5)[next]
@@ -80,14 +82,14 @@ object Widgets {
         val rs = intArrayOf(R.id.r0, R.id.r1, R.id.r2, R.id.r3, R.id.r4, R.id.r5)
         val v = RemoteViews(ctx.packageName, R.layout.widget_khatmah)
         for (row in 0..5) {
-            val name = c.getString(labels[row]); val time = fmt2(all[row])
+            val name = if (row == 2) Names.of(c, 1, day) else c.getString(labels[row]); val time = fmt2(all[row])
             // Arabic: time on the left, name on the right (like Khatmah). English: the reverse.
             v.setTextViewText(ls[row], if (ar) time else name)
             v.setTextViewText(rs[row], if (ar) name else time)
             val col = if (row == nextRow) GOLD else WHITE
             v.setTextColor(ls[row], col); v.setTextColor(rs[row], col)
         }
-        v.setTextViewText(R.id.remain, c.getString(R.string.remaining, Names.of(c, next)))
+        v.setTextViewText(R.id.remain, c.getString(R.string.remaining, Names.of(c, next, nextT.toLocalDate())))
         countdown(v, R.id.countdown, nextT)
         v.setOnClickPendingIntent(R.id.root, openApp(ctx))
         return v

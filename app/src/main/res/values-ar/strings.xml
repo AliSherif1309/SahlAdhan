@@ -57,4 +57,6 @@
     <string name="sunrise_time">حان وقت الشروق</string>
     <string name="banner">شريط الصلاة القادمة</string>
     <string name="banner_switch">إظهار الصلاة القادمة في الإشعارات</string>
+    <string name="jumuah">الجمعة</string>
+    <string name="first_adhan">الأذان الأول لصلاة الجمعة</string>
 </resources>

@@ -15,7 +15,7 @@ object PrayerCalc {
 
     val methods = listOf(
         Method("Qatar · Khatmah timetable", "قطر · مطابق لختمة", 18.0, 0.0, 90, intArrayOf(-2, -1, 0, 0, 2, 0)),
-        Method("Qatar Calendar House (18°, Isha +90 min)", "دار التقويم القطري (١٨°، العشاء +٩٠ د)", 18.0, 0.0, 90),
+        Method("Qatar Calendar House (18°, Isha +90 min)", "دار التقويم القطري (١٨°، العشاء +٩٠ د)", 18.0, 0.0, 90, intArrayOf(-1, -1, 0, 1, 2, 0)),
         Method("Gulf (19.5°, Isha +90 min)", "الخليج (١٩٫٥°، العشاء +٩٠ د)", 19.5, 0.0, 90),
         Method("Umm al-Qura (18.5°, Isha +90 min)", "أم القرى (١٨٫٥°، العشاء +٩٠ د)", 18.5, 0.0, 90),
         Method("Muslim World League (18° / 17°)", "رابطة العالم الإسلامي (١٨° / ١٧°)", 18.0, 17.0, 0),
