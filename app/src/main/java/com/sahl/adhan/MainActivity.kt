@@ -206,6 +206,13 @@ class MainActivity : Activity() {
         }
         status.setPadding(0, (10 * dp).toInt(), 0, (6 * dp).toInt())
         aCard.addView(status)
+        aCard.addView(Switch(this).apply {
+            text = getString(R.string.banner_switch); textSize = 15f; setTextColor(c(R.color.text))
+            font?.let { typeface = it }
+            isChecked = prefs.showBanner
+            setPadding(0, (8 * dp).toInt(), 0, (4 * dp).toInt())
+            setOnCheckedChangeListener { _, on -> prefs.showBanner = on; Banner.update(this@MainActivity) }
+        })
         soundPicker(aCard, R.string.sound_full, Sounds.full, prefs.fullSound) { prefs.fullSound = it }
         soundPicker(aCard, R.string.sound_short, Sounds.short, prefs.shortSound) { prefs.shortSound = it }
         aCard.addView(Button(this).apply { text = getString(R.string.test_full); setOnClickListener { test(ALERT_FULL) } })

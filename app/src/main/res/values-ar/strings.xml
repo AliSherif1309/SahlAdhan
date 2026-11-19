@@ -55,4 +55,6 @@
     <string name="version">الإصدار %1$s</string>
     <string name="checking">جارٍ التحقق…</string>
     <string name="sunrise_time">حان وقت الشروق</string>
+    <string name="banner">شريط الصلاة القادمة</string>
+    <string name="banner_switch">إظهار الصلاة القادمة في الإشعارات</string>
 </resources>

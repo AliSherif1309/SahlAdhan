@@ -5,46 +5,46 @@
         android:orientation="vertical" android:paddingLeft="16dp" android:paddingRight="16dp" android:paddingTop="6dp" android:paddingBottom="6dp">
         <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:gravity="center_vertical">
             <TextView android:id="@+id/l0" android:fontFamily="@font/thmanyah" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                android:gravity="left" android:textColor="#FFFFFF" android:textSize="15sp" android:maxLines="1"/>
+                android:gravity="left" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" android:maxLines="1"/>
             <TextView android:id="@+id/r0" android:fontFamily="@font/thmanyah" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                android:gravity="right" android:textColor="#FFFFFF" android:textSize="15sp" android:maxLines="1"/>
+                android:gravity="right" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" android:maxLines="1"/>
         </LinearLayout>
         <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:gravity="center_vertical">
             <TextView android:id="@+id/l1" android:fontFamily="@font/thmanyah" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                android:gravity="left" android:textColor="#FFFFFF" android:textSize="15sp" android:maxLines="1"/>
+                android:gravity="left" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" android:maxLines="1"/>
             <TextView android:id="@+id/r1" android:fontFamily="@font/thmanyah" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                android:gravity="right" android:textColor="#FFFFFF" android:textSize="15sp" android:maxLines="1"/>
+                android:gravity="right" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" android:maxLines="1"/>
         </LinearLayout>
         <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:gravity="center_vertical">
             <TextView android:id="@+id/l2" android:fontFamily="@font/thmanyah" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                android:gravity="left" android:textColor="#FFFFFF" android:textSize="15sp" android:maxLines="1"/>
+                android:gravity="left" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" android:maxLines="1"/>
             <TextView android:id="@+id/r2" android:fontFamily="@font/thmanyah" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                android:gravity="right" android:textColor="#FFFFFF" android:textSize="15sp" android:maxLines="1"/>
+                android:gravity="right" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" android:maxLines="1"/>
         </LinearLayout>
         <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:gravity="center_vertical">
             <TextView android:id="@+id/l3" android:fontFamily="@font/thmanyah" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                android:gravity="left" android:textColor="#FFFFFF" android:textSize="15sp" android:maxLines="1"/>
+                android:gravity="left" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" android:maxLines="1"/>
             <TextView android:id="@+id/r3" android:fontFamily="@font/thmanyah" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                android:gravity="right" android:textColor="#FFFFFF" android:textSize="15sp" android:maxLines="1"/>
+                android:gravity="right" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" android:maxLines="1"/>
         </LinearLayout>
         <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:gravity="center_vertical">
             <TextView android:id="@+id/l4" android:fontFamily="@font/thmanyah" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                android:gravity="left" android:textColor="#FFFFFF" android:textSize="15sp" android:maxLines="1"/>
+                android:gravity="left" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" android:maxLines="1"/>
             <TextView android:id="@+id/r4" android:fontFamily="@font/thmanyah" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                android:gravity="right" android:textColor="#FFFFFF" android:textSize="15sp" android:maxLines="1"/>
+                android:gravity="right" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" android:maxLines="1"/>
         </LinearLayout>
         <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:gravity="center_vertical">
             <TextView android:id="@+id/l5" android:fontFamily="@font/thmanyah" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                android:gravity="left" android:textColor="#FFFFFF" android:textSize="15sp" android:maxLines="1"/>
+                android:gravity="left" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" android:maxLines="1"/>
             <TextView android:id="@+id/r5" android:fontFamily="@font/thmanyah" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                android:gravity="right" android:textColor="#FFFFFF" android:textSize="15sp" android:maxLines="1"/>
+                android:gravity="right" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" android:maxLines="1"/>
         </LinearLayout>
     </LinearLayout>
     <LinearLayout android:id="@+id/panel" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
         android:orientation="vertical" android:gravity="center" android:background="@drawable/kh_right_bg" android:padding="8dp">
         <ImageView android:layout_width="30dp" android:layout_height="30dp" android:src="@drawable/ic_moon_cloud" android:alpha="0.8"/>
         <TextView android:id="@+id/remain" android:fontFamily="@font/thmanyah" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:textColor="@color/gold" android:textSize="17sp" android:textStyle="bold" android:layout_marginTop="2dp" android:maxLines="1"/>
+            android:textColor="@color/w_gold" android:textSize="17sp" android:textStyle="bold" android:layout_marginTop="2dp" android:maxLines="1"/>
         <Chronometer android:id="@+id/countdown" android:fontFamily="@font/thmanyah" android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:textColor="#FFFFFF" android:textSize="30sp" android:textStyle="bold"/>
     </LinearLayout>

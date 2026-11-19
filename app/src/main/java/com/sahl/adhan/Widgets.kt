@@ -13,7 +13,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 object Widgets {
-    private const val GOLD = 0xFFE2C25B.toInt()
+    private const val GOLD = 0xFFF5C84C.toInt()
     private const val WHITE = 0xFFFFFFFF.toInt()
 
     fun fmt(t: ZonedDateTime): String = t.format(DateTimeFormatter.ofPattern("h:mm", Locale.ENGLISH))
@@ -98,6 +98,7 @@ object Widgets {
         m.getAppWidgetIds(ComponentName(ctx, CompactWidget::class.java)).forEach { m.updateAppWidget(it, compact(ctx)) }
         m.getAppWidgetIds(ComponentName(ctx, WideWidget::class.java)).forEach { m.updateAppWidget(it, wide(ctx)) }
         m.getAppWidgetIds(ComponentName(ctx, KhatmahWidget::class.java)).forEach { m.updateAppWidget(it, khatmah(ctx)) }
+        Banner.update(ctx)
     }
 }
 

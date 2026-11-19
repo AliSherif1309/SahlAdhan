@@ -25,6 +25,8 @@ class Prefs(ctx: Context) {
     var fullSound: String get() = p.getString("fullSound", "adhan_beautiful") ?: "adhan_beautiful"; set(v) = p.edit().putString("fullSound", v).apply()
     var shortSound: String get() = p.getString("shortSound", "takbir") ?: "takbir"; set(v) = p.edit().putString("shortSound", v).apply()
 
+    var showBanner: Boolean get() = p.getBoolean("banner", true); set(v) = p.edit().putBoolean("banner", v).apply()
+
     fun adj(i: Int) = p.getInt("adj$i", 0)
     fun setAdj(i: Int, v: Int) = p.edit().putInt("adj$i", v).apply()
     /** i = 0..4 prayers, 5 = sunrise (default: short alert) */

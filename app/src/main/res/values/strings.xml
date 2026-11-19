@@ -55,4 +55,6 @@
     <string name="version">Version %1$s</string>
     <string name="checking">Checking…</string>
     <string name="sunrise_time">Sunrise time</string>
+    <string name="banner">Next prayer banner</string>
+    <string name="banner_switch">Show next prayer in notifications</string>
 </resources>
