@@ -20,6 +20,8 @@ jobs:
           curl -fSL --retry 3 -o $RAW/adhan_classic.ogg $SRC/adhan_short.ogg
           sudo apt-get install -y -qq ffmpeg > /dev/null
           ffmpeg -loglevel error -y -i $RAW/adhan_classic.ogg -t 10 -af "afade=t=out:st=7:d=3" -c:a libvorbis $RAW/takbir.ogg
+      - name: Download Ruqyah verses (AlQuran.cloud)
+        run: python3 scripts/fetch_ruqyah.py
       - name: Restore signing key
         env:
           KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}

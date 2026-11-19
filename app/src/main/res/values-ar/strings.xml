@@ -59,4 +59,10 @@
     <string name="banner_switch">إظهار الصلاة القادمة في الإشعارات</string>
     <string name="jumuah">الجمعة</string>
     <string name="first_adhan">الأذان الأول لصلاة الجمعة</string>
+    <string name="qibla">🕋 القبلة</string>
+    <string name="ruqyah">الرقية الشرعية</string>
+    <string name="ruqyah_listen">▶ استمع: الرقية من السنة — أحمد النفيس</string>
+    <string name="ruqyah_sunnah">من السنة النبوية</string>
+    <string name="ruqyah_quran">من القرآن الكريم</string>
+    <string name="times">%1$d مرات</string>
 </resources>

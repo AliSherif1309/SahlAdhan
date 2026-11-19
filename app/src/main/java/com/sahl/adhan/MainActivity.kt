@@ -143,6 +143,13 @@ class MainActivity : Activity() {
         header.addView(text(HijrahDate.from(now).format(DateTimeFormatter.ofPattern("d MMMM yyyy", loc)), 13f, 0xFFCFE3DC.toInt()))
         header.addView(text("${getString(R.string.next)}: ${Names.of(this, nextI, nextT.toLocalDate())}  ${Widgets.fmt(nextT)}", 22f, 0xFFFFFFFF.toInt(), true).apply { setPadding(0, (8 * dp).toInt(), 0, 0) })
 
+        val links = LinearLayout(this).apply { layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = (10 * dp).toInt() } }
+        links.addView(Button(this).apply { text = getString(R.string.qibla); setOnClickListener { startActivity(Qibla.intent(this@MainActivity)) } },
+            LinearLayout.LayoutParams(0, -2, 1f))
+        links.addView(Button(this).apply { text = getString(R.string.ruqyah); setOnClickListener { startActivity(Intent(this@MainActivity, RuqyahActivity::class.java)) } },
+            LinearLayout.LayoutParams(0, -2, 1f))
+        body.addView(links)
+
         newer?.let { r ->
             val u = card()
             u.addView(text(getString(R.string.update_available, r.name), 16f, c(R.color.emerald), true))

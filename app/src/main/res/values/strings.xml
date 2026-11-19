@@ -59,4 +59,10 @@
     <string name="banner_switch">Show next prayer in notifications</string>
     <string name="jumuah">Jumuah</string>
     <string name="first_adhan">First Friday adhan</string>
+    <string name="qibla">🕋 Qibla</string>
+    <string name="ruqyah">Ruqyah</string>
+    <string name="ruqyah_listen">▶ Listen: Sunnah Ruqyah — Ahmad Al-Nufais</string>
+    <string name="ruqyah_sunnah">From the Sunnah</string>
+    <string name="ruqyah_quran">From the Quran</string>
+    <string name="times">%1$d times</string>
 </resources>

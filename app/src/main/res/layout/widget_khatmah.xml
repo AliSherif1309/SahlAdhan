@@ -42,7 +42,9 @@
     </LinearLayout>
     <LinearLayout android:id="@+id/panel" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
         android:orientation="vertical" android:gravity="center" android:background="@drawable/kh_right_bg" android:padding="8dp">
-        <ImageView android:layout_width="30dp" android:layout_height="30dp" android:src="@drawable/ic_moon_cloud" android:alpha="0.8"/>
+        <ImageView android:id="@+id/qibla" android:layout_width="30dp" android:layout_height="30dp" android:src="@drawable/ic_kaaba" android:padding="2dp"/>
+        <TextView android:id="@+id/hijri" android:fontFamily="@font/thmanyah" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="#D9FFFFFF" android:textSize="12sp" android:maxLines="1" android:layout_marginTop="2dp"/>
         <TextView android:id="@+id/remain" android:fontFamily="@font/thmanyah" android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:textColor="@color/w_gold" android:textSize="17sp" android:textStyle="bold" android:layout_marginTop="2dp" android:maxLines="1"/>
         <Chronometer android:id="@+id/countdown" android:fontFamily="@font/thmanyah" android:layout_width="wrap_content" android:layout_height="wrap_content"

@@ -9,6 +9,10 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <queries>
+        <package android:name="com.aly.trueqibla" />
+    </queries>
+
     <application
         android:label="@string/app_name"
         android:icon="@drawable/ic_launcher"
@@ -22,6 +26,7 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".RuqyahActivity" android:exported="false" android:label="@string/ruqyah" />
         <receiver android:name=".AlarmReceiver" android:exported="false" />
         <service android:name=".AdhanService" android:exported="false" android:foregroundServiceType="mediaPlayback" />
         <receiver android:name=".KhatmahWidget" android:exported="false" android:label="@string/widget_khatmah">

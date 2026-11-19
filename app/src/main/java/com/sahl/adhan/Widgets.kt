@@ -19,6 +19,15 @@ object Widgets {
     fun fmt(t: ZonedDateTime): String = t.format(DateTimeFormatter.ofPattern("h:mm", Locale.ENGLISH))
     fun fmt2(t: ZonedDateTime): String = t.format(DateTimeFormatter.ofPattern("hh:mm", Locale.ENGLISH))
 
+    /** Hijri (Umm al-Qura) date in the app language, e.g. ٩ جمادى الآخرة ١٤٤٨ */
+    fun hijri(c: Context, day: java.time.LocalDate): String {
+        val loc = c.resources.configuration.locales[0]
+        return java.time.chrono.HijrahDate.from(day).format(DateTimeFormatter.ofPattern("d MMMM yyyy", loc))
+    }
+
+    private fun openQibla(ctx: Context) = PendingIntent.getActivity(
+        ctx, 3, Qibla.intent(ctx), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+
     private fun openApp(ctx: Context) = PendingIntent.getActivity(
         ctx, 1, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
 
@@ -33,6 +42,7 @@ object Widgets {
         val (i, t) = Prefs(ctx).next()
         val v = RemoteViews(ctx.packageName, R.layout.widget_compact)
         v.setTextViewText(R.id.label, c.getString(R.string.next))
+        v.setTextViewText(R.id.hijri, hijri(c, java.time.LocalDate.now(Prefs(ctx).zone)))
         v.setTextViewText(R.id.name, Names.of(c, i, t.toLocalDate()))
         v.setTextViewText(R.id.time, fmt(t))
         countdown(v, R.id.countdown, t)
@@ -91,7 +101,9 @@ object Widgets {
         }
         v.setTextViewText(R.id.remain, c.getString(R.string.remaining, Names.of(c, next, nextT.toLocalDate())))
         countdown(v, R.id.countdown, nextT)
+        v.setTextViewText(R.id.hijri, hijri(c, now.toLocalDate()))
         v.setOnClickPendingIntent(R.id.root, openApp(ctx))
+        v.setOnClickPendingIntent(R.id.qibla, openQibla(ctx))
         return v
     }
 
