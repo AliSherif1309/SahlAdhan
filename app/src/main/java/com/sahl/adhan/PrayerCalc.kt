@@ -24,23 +24,35 @@ object PrayerCalc {
         Method("ISNA (15° / 15°)", "أمريكا الشمالية (١٥° / ١٥°)", 15.0, 15.0, 0),
     )
 
-    data class City(val en: String, val ar: String, val lat: Double, val lng: Double, val tz: String)
+    /** qch = city id on the official Qatar Calendar House site (0 = not published there) */
+    data class City(val en: String, val ar: String, val lat: Double, val lng: Double, val tz: String, val qch: Int = 0)
 
     val cities = listOf(
-        City("Doha", "الدوحة", 25.2854, 51.5310, "Asia/Qatar"),
+        City("Doha", "الدوحة", 25.2854, 51.5310, "Asia/Qatar", 3),
         City("Al Wakrah", "الوكرة", 25.1659, 51.6038, "Asia/Qatar"),
         City("Al Khor", "الخور", 25.6839, 51.5058, "Asia/Qatar"),
-        City("Dukhan", "دخان", 25.4250, 50.7820, "Asia/Qatar"),
-        City("Makkah", "مكة المكرمة", 21.4225, 39.8262, "Asia/Riyadh"),
-        City("Madinah", "المدينة المنورة", 24.4672, 39.6111, "Asia/Riyadh"),
-        City("Riyadh", "الرياض", 24.7136, 46.6753, "Asia/Riyadh"),
+        City("Al Shamal", "الشمال", 26.1293, 51.2009, "Asia/Qatar", 6),
+        City("Mesaieed", "مسيعيد", 24.9909, 51.5493, "Asia/Qatar", 13),
+        City("Dukhan", "دخان", 25.4250, 50.7820, "Asia/Qatar", 14),
+        City("Abu Samra", "أبو سمرة", 24.7469, 50.8325, "Asia/Qatar", 15),
+        City("Halul", "حالول", 25.6750, 52.4100, "Asia/Qatar", 16),
+        City("Makkah", "مكة المكرمة", 21.4225, 39.8262, "Asia/Riyadh", 8),
+        City("Madinah", "المدينة المنورة", 24.4672, 39.6111, "Asia/Riyadh", 10),
+        City("Riyadh", "الرياض", 24.7136, 46.6753, "Asia/Riyadh", 5),
         City("Dubai", "دبي", 25.2048, 55.2708, "Asia/Dubai"),
-        City("Abu Dhabi", "أبوظبي", 24.4539, 54.3773, "Asia/Dubai"),
-        City("Kuwait City", "الكويت", 29.3759, 47.9774, "Asia/Kuwait"),
-        City("Manama", "المنامة", 26.2285, 50.5860, "Asia/Bahrain"),
-        City("Muscat", "مسقط", 23.5880, 58.3829, "Asia/Muscat"),
+        City("Abu Dhabi", "أبوظبي", 24.4539, 54.3773, "Asia/Dubai", 9),
+        City("Kuwait City", "الكويت", 29.3759, 47.9774, "Asia/Kuwait", 7),
+        City("Manama", "المنامة", 26.2285, 50.5860, "Asia/Bahrain", 11),
+        City("Muscat", "مسقط", 23.5880, 58.3829, "Asia/Muscat", 12),
         City("Cairo", "القاهرة", 30.0444, 31.2357, "Africa/Cairo"),
     )
+
+    /** Distance in km between two points (haversine) */
+    fun km(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
+        val dLat = rad(lat2 - lat1); val dLng = rad(lng2 - lng1)
+        val a = sin(dLat / 2).pow(2) + cos(rad(lat1)) * cos(rad(lat2)) * sin(dLng / 2).pow(2)
+        return 6371.0 * 2 * atan2(sqrt(a), sqrt(1 - a))
+    }
 
     /** Returns 6 times: Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha. adj = 5 values (no sunrise). */
     fun compute(date: LocalDate, city: City, m: Method, hanafi: Boolean, adj: IntArray): List<ZonedDateTime> {
@@ -58,7 +70,8 @@ object PrayerCalc {
             repeat(3) {
                 val decl = sun(jd + t / 24.0).first
                 val cosH = (sin(rad(alt)) - sin(rad(lat)) * sin(rad(decl))) / (cos(rad(lat)) * cos(rad(decl)))
-                val h = deg(acos(cosH.coerceIn(-1.0, 1.0))) / 15.0
+                if (cosH < -1.0 || cosH > 1.0) return Double.NaN   // sun never reaches this angle today
+                val h = deg(acos(cosH)) / 15.0
                 val noon = noonUtc(t)
                 t = if (morning) noon - h else noon + h
             }
@@ -79,8 +92,14 @@ object PrayerCalc {
             t
         }
         val maghrib = atAltitude(-0.833, 18.0 - lngHours, false)
-        val isha = if (m.ishaMinutes > 0) maghrib + m.ishaMinutes / 60.0
+        var isha = if (m.ishaMinutes > 0) maghrib + m.ishaMinutes / 60.0
                    else atAltitude(-m.isha, 19.5 - lngHours, false)
+        // Far north/south in summer the sun may not sink to the Fajr/Isha angle:
+        // use the "angle-based" rule (a share of the night = angle / 60), as most authorities do.
+        var fajrT = fajr
+        val night = 24.0 - (maghrib - sunrise)
+        if (fajrT.isNaN() && !sunrise.isNaN()) fajrT = sunrise - m.fajr / 60.0 * night
+        if (isha.isNaN() && !maghrib.isNaN()) isha = maghrib + m.isha / 60.0 * night
 
         val zone = ZoneId.of(city.tz)
         val base = date.atStartOfDay(ZoneOffset.UTC)
@@ -94,7 +113,7 @@ object PrayerCalc {
         // with a fixed Isha interval, Isha follows Maghrib's offset too
         val ishaOff = o[5] + (if (m.ishaMinutes > 0) o[4] else 0)
         return listOf(
-            toZ(fajr, o[0] + adj[0]), toZ(sunrise, o[1]), toZ(dhuhr, o[2] + adj[1]),
+            toZ(fajrT, o[0] + adj[0]), toZ(sunrise, o[1]), toZ(dhuhr, o[2] + adj[1]),
             toZ(asr, o[3] + adj[2]), toZ(maghrib, o[4] + adj[3]), toZ(isha, ishaOff + adj[4])
         )
     }

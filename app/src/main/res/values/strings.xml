@@ -80,4 +80,17 @@
     <string name="o_b_times">All of today\'s times (expanded)</string>
     <string name="o_b_after">The prayer after next</string>
     <string name="then">Then</string>
+    <string name="pick_file">📁 Use my own sound file</string>
+    <string name="custom_saved">Sound saved</string>
+    <string name="s_custom">My sound file</string>
+    <string name="my_location">📍 My location</string>
+    <string name="search_city">🔍 Search city</string>
+    <string name="search_hint">City name, e.g. Lusail</string>
+    <string name="locating">Finding your location…</string>
+    <string name="no_location">Could not get your location. Turn on Location and try again.</string>
+    <string name="no_results">No results</string>
+    <string name="official_sync">Use the official Qatar Calendar times (internet once a day)</string>
+    <string name="src_official">✓ Today\'s times: official Qatar Calendar House</string>
+    <string name="src_pending">Today\'s times: calculated (official times not downloaded yet)</string>
+    <string name="src_calc">Today\'s times: calculated from your location</string>
 </resources>

@@ -52,7 +52,7 @@ object Banner {
         }
         val open = PendingIntent.getActivity(ctx, 2, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
         val n = Notification.Builder(ctx, CHANNEL)
-            .setSmallIcon(R.drawable.ic_moon)
+            .setSmallIcon(R.drawable.ic_mosque)
             .setContentTitle(name)
             .setContentText(line)
             .setStyle(Notification.BigTextStyle().bigText(big.toString()))

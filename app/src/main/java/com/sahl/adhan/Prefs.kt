@@ -37,14 +37,48 @@ class Prefs(ctx: Context) {
     fun alert(i: Int) = p.getInt("alert$i", if (i >= 5) ALERT_SHORT else ALERT_FULL)
     fun setAlert(i: Int, v: Int) = p.edit().putInt("alert$i", v).apply()
 
-    val city get() = PrayerCalc.cities[cityIndex.coerceIn(0, PrayerCalc.cities.lastIndex)]
+    /** Use the official Qatar Calendar House times when available (needs internet once a day) */
+    var officialSync: Boolean get() = p.getBoolean("officialSync", true); set(v) = p.edit().putBoolean("officialSync", v).apply()
+
+    /** My location (GPS or search). Selected when cityIndex == cities.size */
+    fun setCustom(name: String, lat: Double, lng: Double, tz: String) {
+        // If it's within 40 km of an official Qatar Calendar city, use that city's official times
+        val near = PrayerCalc.cities.filter { it.qch > 0 }
+            .minByOrNull { PrayerCalc.km(lat, lng, it.lat, it.lng) }
+            ?.takeIf { PrayerCalc.km(lat, lng, it.lat, it.lng) <= 40.0 }
+        p.edit().putString("c_name", name).putFloat("c_lat", lat.toFloat()).putFloat("c_lng", lng.toFloat())
+            .putString("c_tz", tz).putInt("c_qch", near?.qch ?: 0)
+            .putInt("city", PrayerCalc.cities.size).apply()
+    }
+    val custom: PrayerCalc.City? get() = p.getString("c_name", null)?.let {
+        PrayerCalc.City(it, it, p.getFloat("c_lat", 0f).toDouble(), p.getFloat("c_lng", 0f).toDouble(),
+            p.getString("c_tz", "Asia/Qatar")!!, p.getInt("c_qch", 0))
+    }
+
+    val city: PrayerCalc.City get() =
+        if (cityIndex == PrayerCalc.cities.size) custom ?: PrayerCalc.cities[0]
+        else PrayerCalc.cities[cityIndex.coerceIn(0, PrayerCalc.cities.lastIndex)]
+
+    /** True when today's times come from the official calendar */
+    fun isOfficial(date: LocalDate) = officialSync && city.qch > 0 && p.getString(Official.key(city.qch, date), null) != null
     val zone: ZoneId get() = ZoneId.of(city.tz)
 
     /** Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha for a date */
-    fun times(date: LocalDate): List<ZonedDateTime> = PrayerCalc.compute(
-        date, city, PrayerCalc.methods[methodIndex.coerceIn(0, PrayerCalc.methods.lastIndex)],
-        hanafi, IntArray(5) { adj(it) }
-    )
+    fun times(date: LocalDate): List<ZonedDateTime> {
+        val c = city
+        if (officialSync && c.qch > 0) {
+            p.getString(Official.key(c.qch, date), null)?.let { s ->
+                val mins = s.split(",").map { it.toInt() }
+                if (mins.size == 6) {
+                    val adjFor = intArrayOf(adj(0), 0, adj(1), adj(2), adj(3), adj(4))
+                    // Official times are Qatar local time (Gulf cities on the site are given in their own local time)
+                    return mins.mapIndexed { r, m -> date.atStartOfDay(zone).plusMinutes((m + adjFor[r]).toLong()) }
+                }
+            }
+        }
+        return PrayerCalc.compute(date, c, PrayerCalc.methods[methodIndex.coerceIn(0, PrayerCalc.methods.lastIndex)],
+            hanafi, IntArray(5) { adj(it) })
+    }
 
     fun fard(date: LocalDate) = times(date).let { listOf(it[0], it[2], it[3], it[4], it[5]) }
 
@@ -113,10 +147,14 @@ object Sounds {
         Sound("system", R.string.s_system),
     )
     private fun rawId(ctx: Context, key: String) = ctx.resources.getIdentifier(key, "raw", ctx.packageName)
-    fun available(ctx: Context, list: List<Sound>) =
-        list.filter { it.key == "alarm" || it.key == "system" || rawId(ctx, it.key) != 0 }
+    fun isCustom(key: String) = key.startsWith("custom_")
+    fun customFile(ctx: Context, key: String) = java.io.File(ctx.filesDir, key)
+    fun available(ctx: Context, list: List<Sound>, customKey: String) =
+        list.filter { it.key == "alarm" || it.key == "system" || rawId(ctx, it.key) != 0 } +
+            (if (customFile(ctx, customKey).exists()) listOf(Sound(customKey, R.string.s_custom)) else emptyList())
 
     fun uri(ctx: Context, key: String): Uri {
+        if (isCustom(key) && customFile(ctx, key).exists()) return Uri.fromFile(customFile(ctx, key))
         val id = rawId(ctx, key)
         return when {
             id != 0 -> Uri.parse("android.resource://${ctx.packageName}/$id")

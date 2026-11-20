@@ -50,9 +50,10 @@ class MainActivity : Activity() {
         } catch (e: Exception) { null }
     }
 
-    private fun soundPicker(parent: LinearLayout, title: Int, list: List<Sounds.Sound>, current: String, save: (String) -> Unit) {
+    private fun soundPicker(parent: LinearLayout, title: Int, list: List<Sounds.Sound>, current: String,
+                            customKey: String, pickCode: Int, save: (String) -> Unit) {
         parent.addView(text(getString(title), 13f, c(R.color.text)).apply { setPadding(0, (8 * dp).toInt(), 0, 0) })
-        val avail = Sounds.available(this, list)
+        val avail = Sounds.available(this, list, customKey)
         val row = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
         val sel = avail.indexOfFirst { it.key == current }.coerceAtLeast(0)
         row.addView(spinner(avail.map { getString(it.label) }, sel) { save(avail[it].key); refreshAll() },
@@ -60,6 +61,86 @@ class MainActivity : Activity() {
         row.addView(Button(this).apply { text = getString(R.string.preview); setOnClickListener { play(avail[sel].key) } })
         row.addView(Button(this).apply { text = getString(R.string.stop); setOnClickListener { stopPreview() } })
         parent.addView(row)
+        parent.addView(Button(this).apply {
+            text = getString(R.string.pick_file)
+            setOnClickListener {
+                startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("audio/*"), pickCode)
+            }
+        })
+    }
+
+    @Deprecated("Activity result")
+    override fun onActivityResult(req: Int, res: Int, data: Intent?) {
+        super.onActivityResult(req, res, data)
+        val uri = data?.data ?: return
+        if (res != RESULT_OK || (req != 10 && req != 11)) return
+        val key = if (req == 10) "custom_full" else "custom_short"
+        try {
+            contentResolver.openInputStream(uri)!!.use { inp -> Sounds.customFile(this, key).outputStream().use { inp.copyTo(it) } }
+            if (req == 10) prefs.fullSound = key else prefs.shortSound = key
+            Toast.makeText(this, getString(R.string.custom_saved), Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) { Toast.makeText(this, "✗", Toast.LENGTH_SHORT).show() }
+        refreshAll()
+    }
+
+    // --- Location: GPS and search ---
+    private fun useGps() {
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), 20)
+            return
+        }
+        Toast.makeText(this, getString(R.string.locating), Toast.LENGTH_SHORT).show()
+        val lm = getSystemService(android.location.LocationManager::class.java)
+        val got: (android.location.Location?) -> Unit = { loc ->
+            if (loc == null) runOnUiThread { Toast.makeText(this, getString(R.string.no_location), Toast.LENGTH_LONG).show() }
+            else saveLocation(loc.latitude, loc.longitude, null)
+        }
+        try {
+            val provider = when {
+                Build.VERSION.SDK_INT >= 31 && lm.hasProvider(android.location.LocationManager.FUSED_PROVIDER) -> android.location.LocationManager.FUSED_PROVIDER
+                lm.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER) -> android.location.LocationManager.GPS_PROVIDER
+                else -> android.location.LocationManager.NETWORK_PROVIDER
+            }
+            if (Build.VERSION.SDK_INT >= 30) lm.getCurrentLocation(provider, null, mainExecutor) { got(it) }
+            else lm.requestSingleUpdate(provider, { got(it) }, mainLooper)
+        } catch (e: SecurityException) { got(null) } catch (e: Exception) { got(null) }
+    }
+
+    /** Name the place (reverse geocode), then save it as "my location" */
+    private fun saveLocation(lat: Double, lng: Double, name: String?) {
+        Thread {
+            val label = name ?: try {
+                @Suppress("DEPRECATION")
+                android.location.Geocoder(this, resources.configuration.locales[0]).getFromLocation(lat, lng, 1)
+                    ?.firstOrNull()?.let { it.locality ?: it.subAdminArea ?: it.adminArea }
+            } catch (e: Exception) { null } ?: String.format(java.util.Locale.ENGLISH, "%.3f, %.3f", lat, lng)
+            prefs.setCustom("📍 $label", lat, lng, java.time.ZoneId.systemDefault().id)
+            runOnUiThread { Official.syncIfNeeded(this, force = true) { runOnUiThread { refreshAll() } }; refreshAll() }
+        }.start()
+    }
+
+    private fun searchCity() {
+        val input = EditText(this).apply { hint = getString(R.string.search_hint) }
+        android.app.AlertDialog.Builder(this).setTitle(getString(R.string.search_city)).setView(input)
+            .setPositiveButton("🔍") { _, _ ->
+                val q = input.text.toString().trim()
+                if (q.isNotEmpty()) Thread {
+                    val res = try {
+                        @Suppress("DEPRECATION")
+                        android.location.Geocoder(this, resources.configuration.locales[0]).getFromLocationName(q, 8) ?: emptyList()
+                    } catch (e: Exception) { emptyList() }
+                    runOnUiThread {
+                        if (res.isEmpty()) Toast.makeText(this, getString(R.string.no_results), Toast.LENGTH_LONG).show()
+                        else {
+                            val labels = res.map { x -> listOfNotNull(x.locality ?: x.featureName, x.adminArea, x.countryName).distinct().joinToString("، ") }
+                            android.app.AlertDialog.Builder(this).setItems(labels.toTypedArray()) { _, i ->
+                                saveLocation(res[i].latitude, res[i].longitude, res[i].locality ?: res[i].featureName ?: labels[i])
+                            }.show()
+                        }
+                    }
+                }.start()
+            }.setNegativeButton("✕", null).show()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,6 +161,7 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume(); Scheduler.scheduleAll(this); render()
+        Official.syncIfNeeded(this) { ok -> if (ok) runOnUiThread { render() } }
         if (!checked) { checked = true; checkUpdates(false) }
     }
 
@@ -198,7 +280,21 @@ class MainActivity : Activity() {
         // City
         val cityCard = card()
         cityCard.addView(text(getString(R.string.city), 14f, c(R.color.sub), true))
-        cityCard.addView(spinner(PrayerCalc.cities.map { if (ar) it.ar else it.en }, prefs.cityIndex) { prefs.cityIndex = it; refreshAll() })
+        val names = PrayerCalc.cities.map { if (ar) it.ar else it.en } + listOfNotNull(prefs.custom?.en)
+        cityCard.addView(spinner(names, prefs.cityIndex.coerceIn(0, names.lastIndex)) {
+            prefs.cityIndex = it; Official.syncIfNeeded(this, force = true) { runOnUiThread { refreshAll() } }; refreshAll()
+        })
+        val locRow = LinearLayout(this)
+        locRow.addView(Button(this).apply { text = getString(R.string.my_location); setOnClickListener { useGps() } }, LinearLayout.LayoutParams(0, -2, 1f))
+        locRow.addView(Button(this).apply { text = getString(R.string.search_city); setOnClickListener { searchCity() } }, LinearLayout.LayoutParams(0, -2, 1f))
+        cityCard.addView(locRow)
+        cityCard.addView(Switch(this).apply {
+            text = getString(R.string.official_sync); textSize = 14f; setTextColor(c(R.color.text)); font?.let { typeface = it }
+            isChecked = prefs.officialSync; setPadding(0, (6 * dp).toInt(), 0, 0)
+            setOnCheckedChangeListener { _, on -> prefs.officialSync = on; Official.syncIfNeeded(this@MainActivity, force = true) { runOnUiThread { refreshAll() } }; refreshAll() }
+        })
+        cityCard.addView(text(getString(if (prefs.isOfficial(now.toLocalDate())) R.string.src_official
+            else if (prefs.officialSync && prefs.city.qch > 0) R.string.src_pending else R.string.src_calc), 12f, c(R.color.sub)))
 
         // Alerts
         val aCard = card()
@@ -230,8 +326,8 @@ class MainActivity : Activity() {
             setPadding(0, (8 * dp).toInt(), 0, (4 * dp).toInt())
             setOnCheckedChangeListener { _, on -> prefs.showBanner = on; Banner.update(this@MainActivity) }
         })
-        soundPicker(aCard, R.string.sound_full, Sounds.full, prefs.fullSound) { prefs.fullSound = it }
-        soundPicker(aCard, R.string.sound_short, Sounds.short, prefs.shortSound) { prefs.shortSound = it }
+        soundPicker(aCard, R.string.sound_full, Sounds.full, prefs.fullSound, "custom_full", 10) { prefs.fullSound = it }
+        soundPicker(aCard, R.string.sound_short, Sounds.short, prefs.shortSound, "custom_short", 11) { prefs.shortSound = it }
         aCard.addView(Button(this).apply { text = getString(R.string.test_full); setOnClickListener { test(ALERT_FULL) } })
         aCard.addView(Button(this).apply { text = getString(R.string.test_short); setOnClickListener { test(ALERT_SHORT) } })
         aCard.addView(text(getString(R.string.battery_tip), 12f, c(R.color.sub)).apply {
@@ -289,5 +385,7 @@ class MainActivity : Activity() {
         Toast.makeText(this, getString(R.string.test_set), Toast.LENGTH_LONG).show()
     }
 
-    override fun onRequestPermissionsResult(rc: Int, p: Array<out String>, r: IntArray) { refreshAll() }
+    override fun onRequestPermissionsResult(rc: Int, p: Array<out String>, r: IntArray) {
+        if (rc == 20 && r.any { it == PackageManager.PERMISSION_GRANTED }) useGps() else refreshAll()
+    }
 }

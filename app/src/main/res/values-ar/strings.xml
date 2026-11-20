@@ -80,4 +80,17 @@
     <string name="o_b_times">مواقيت اليوم كاملة (عند التوسيع)</string>
     <string name="o_b_after">الصلاة التي بعدها</string>
     <string name="then">ثم</string>
+    <string name="pick_file">📁 استخدم ملف صوت خاص بي</string>
+    <string name="custom_saved">تم حفظ الصوت</string>
+    <string name="s_custom">ملفي الصوتي</string>
+    <string name="my_location">📍 موقعي</string>
+    <string name="search_city">🔍 ابحث عن مدينة</string>
+    <string name="search_hint">اسم المدينة، مثل: لوسيل</string>
+    <string name="locating">جارٍ تحديد موقعك…</string>
+    <string name="no_location">تعذّر تحديد الموقع. فعّل الموقع وحاول مرة أخرى.</string>
+    <string name="no_results">لا توجد نتائج</string>
+    <string name="official_sync">استخدام مواقيت التقويم القطري الرسمية (إنترنت مرة يومياً)</string>
+    <string name="src_official">✓ مواقيت اليوم: التقويم القطري الرسمي</string>
+    <string name="src_pending">مواقيت اليوم: محسوبة (لم تُنزَّل المواقيت الرسمية بعد)</string>
+    <string name="src_calc">مواقيت اليوم: محسوبة حسب موقعك</string>
 </resources>

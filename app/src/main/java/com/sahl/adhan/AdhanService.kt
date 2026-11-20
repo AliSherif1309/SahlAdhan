@@ -17,8 +17,9 @@ class AdhanService : Service() {
 
     companion object {
         const val ACTION_STOP = "com.sahl.adhan.STOP"
-        fun start(ctx: Context, prayer: Int): Boolean = try {
-            ctx.startForegroundService(Intent(ctx, AdhanService::class.java).putExtra(Scheduler.EXTRA_PRAYER, prayer))
+        fun start(ctx: Context, prayer: Int, sound: String? = null): Boolean = try {
+            ctx.startForegroundService(Intent(ctx, AdhanService::class.java)
+                .putExtra(Scheduler.EXTRA_PRAYER, prayer).putExtra("sound", sound))
             true
         } catch (e: Exception) { false }
     }
@@ -34,7 +35,7 @@ class AdhanService : Service() {
             PendingIntent.FLAG_IMMUTABLE)
         val open = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
         val n = Notification.Builder(this, "adhan_playing")
-            .setSmallIcon(R.drawable.ic_moon)
+            .setSmallIcon(R.drawable.ic_mosque)
             .setContentTitle(AlarmReceiver.title(this, prayer))
             .setContentText(Prefs(this).city.let { if (Names.isArabic(c)) it.ar else it.en })
             .setCategory(Notification.CATEGORY_ALARM)
@@ -50,7 +51,7 @@ class AdhanService : Service() {
             MediaPlayer().apply {
                 setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM)
                     .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build())
-                setDataSource(this@AdhanService, Sounds.uri(this@AdhanService, Prefs(this@AdhanService).fullSound))
+                setDataSource(this@AdhanService, Sounds.uri(this@AdhanService, intent?.getStringExtra("sound") ?: Prefs(this@AdhanService).fullSound))
                 setOnCompletionListener { stopSelf() }
                 prepare(); start()
             }

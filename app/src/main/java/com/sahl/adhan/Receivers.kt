@@ -20,6 +20,7 @@ class AlarmReceiver : BroadcastReceiver() {
         Scheduler.scheduleAll(ctx)
         Widgets.updateAll(ctx)
         Updater.dailyCheck(ctx)
+        Official.syncIfNeeded(ctx)   // once a day: fetch the official Qatar Calendar times
     }
 
     companion object {
@@ -34,11 +35,14 @@ class AlarmReceiver : BroadcastReceiver() {
         }
 
         fun shortAlert(ctx: Context, prayer: Int) {
+            // Your own short sound plays through the player (Android channels can't use private files)
+            val key = Prefs(ctx).shortSound
+            if (Sounds.isCustom(key) && AdhanService.start(ctx, prayer, key)) return
             Scheduler.ensureChannels(ctx)
             val c = ctx.localized()
             val open = PendingIntent.getActivity(ctx, 0, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
             val n = Notification.Builder(ctx, Scheduler.shortChannelId(ctx))
-                .setSmallIcon(R.drawable.ic_moon)
+                .setSmallIcon(R.drawable.ic_mosque)
                 .setContentTitle(title(ctx, prayer))
                 .setContentText(Prefs(ctx).city.let { if (Names.isArabic(c)) it.ar else it.en })
                 .setCategory(Notification.CATEGORY_REMINDER)
