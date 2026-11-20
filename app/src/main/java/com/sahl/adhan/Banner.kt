@@ -6,15 +6,20 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.widget.RemoteViews
+import java.time.ZonedDateTime
 
 /**
- * Persistent "next prayer" notification, like Qatar Calendar House's.
- * Battery: no service and no timers. Android draws the countdown itself (chronometer);
- * the app only refreshes it at prayer times and midnight, via the existing alarm.
+ * Persistent "next prayer" banner: an emerald-and-gold card.
+ * Battery: no service, no timers. Android draws the live timer; the app redraws the card
+ * only at prayer times, 30 min after a prayer, and at midnight (the existing refresh alarm).
  */
 object Banner {
     private const val ID = 600
     private const val CHANNEL = "banner"
+    private const val GOLD = 0xFFF5C84C.toInt()
+    private const val DARK = 0xFF0A231D.toInt()
+    private const val WHITE = 0xFFFFFFFF.toInt()
 
     fun update(ctx: Context) {
         val nm = ctx.getSystemService(NotificationManager::class.java)
@@ -24,49 +29,69 @@ object Banner {
         nm.createNotificationChannel(NotificationChannel(CHANNEL, c.getString(R.string.banner), NotificationManager.IMPORTANCE_LOW).apply {
             setSound(null, null); enableVibration(false); setShowBadge(false)
         })
-        val (row, t) = prefs.nextRow()
-        val day = t.toLocalDate()
-        val name = Names.row(c, row, day)
-        val city = prefs.city.let { if (Names.isArabic(c)) it.ar else it.en }
-        // Collapsed line: time · city · hijri
-        val line = buildList {
-            add(Widgets.fmt2(t)); add(city)
-            if (prefs.opt("b_hijri")) add(Widgets.hijri(c, java.time.LocalDate.now(prefs.zone)))
-        }.joinToString(" · ")
-        // Expanded: the prayer after next, then the whole day's timetable with the next one marked
-        val big = StringBuilder(line)
-        if (prefs.opt("b_after")) {
-            val all6 = prefs.times(day)
-            val after = if (row < 5) Names.row(c, row + 1, day) + " " + Widgets.fmt2(all6[row + 1])
-                        else c.getString(R.string.fajr) + " " + Widgets.fmt2(prefs.times(day.plusDays(1))[0])
-            big.append("\n").append(c.getString(R.string.then)).append(": ").append(after)
-        }
-        if (prefs.opt("b_times")) {
-            val all = prefs.times(day)
+        val now = ZonedDateTime.now(prefs.zone)
+        val s = prefs.show(now)
+        val day = s.time.toLocalDate()
+        val ar = Names.isArabic(c)
+        val name = Names.row(c, s.row, day)
+
+        // Subtitle: city · Hijri · then …
+        val all = prefs.times(day)
+        val sub = buildList {
+            add(prefs.city.let { if (ar) it.ar else it.en })
+            if (prefs.opt("b_hijri")) add(Widgets.hijri(c, now.toLocalDate()))
+            if (prefs.opt("b_after")) {
+                val nr = if (s.since) prefs.nextRow(now) else (if (s.row < 5) (s.row + 1) to all[s.row + 1]
+                         else 0 to prefs.times(day.plusDays(1))[0])
+                add(c.getString(R.string.then) + " " + Names.row(c, nr.first, nr.second.toLocalDate()) + " " + Widgets.fmt(nr.second))
+            }
+        }.joinToString("  ·  ")
+
+        fun fill(v: RemoteViews, big: Boolean) {
+            // Name + time on the reading side, label on the other
+            val title = "$name  ${Widgets.fmt(s.time)}"
+            val label = c.getString(if (s.since) R.string.since_short else R.string.remaining_short)
+            v.setTextViewText(R.id.b_right, if (ar) title else label)
+            v.setTextViewText(R.id.b_left, if (ar) label else title)
+            v.setTextColor(if (ar) R.id.b_left else R.id.b_right, 0xCCFFFFFF.toInt())
+            Widgets.countdown(v, R.id.b_timer, s.time, s.since)
+            v.setTextViewText(R.id.b_sub, sub)
+            if (!big) return
             val labels = intArrayOf(R.string.fajr, R.string.sunrise, R.string.dhuhr, R.string.asr, R.string.maghrib, R.string.isha)
-            big.append("\n")
-            for (r in 0..5) {
-                val n = if (r == 2) Names.of(c, 1, day) else c.getString(labels[r])
-                big.append("\n").append(if (r == row) "▸ " else "   ").append(n).append("  ").append(Widgets.fmt2(all[r]))
+            val cells = intArrayOf(R.id.c0, R.id.c1, R.id.c2, R.id.c3, R.id.c4, R.id.c5)
+            val ns = intArrayOf(R.id.cn0, R.id.cn1, R.id.cn2, R.id.cn3, R.id.cn4, R.id.cn5)
+            val ts = intArrayOf(R.id.ct0, R.id.ct1, R.id.ct2, R.id.ct3, R.id.ct4, R.id.ct5)
+            for (slot in 0..5) {
+                val r = if (ar) 5 - slot else slot   // Arabic: Fajr on the right
+                val hi = r == s.row
+                v.setTextViewText(ns[slot], if (r == 2) Names.of(c, 1, day) else c.getString(labels[r]))
+                v.setTextViewText(ts[slot], Widgets.fmt(all[r]))
+                v.setInt(cells[slot], "setBackgroundResource", if (hi) R.drawable.pill_gold else R.drawable.pill_none)
+                v.setTextColor(ns[slot], if (hi) DARK else 0xD9FFFFFF.toInt())
+                v.setTextColor(ts[slot], if (hi) DARK else WHITE)
             }
         }
+        val small = RemoteViews(ctx.packageName, R.layout.notif_small).also { fill(it, false) }
+        val big = RemoteViews(ctx.packageName, R.layout.notif_big).also { fill(it, true) }
+
         val open = PendingIntent.getActivity(ctx, 2, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
+        val qibla = PendingIntent.getActivity(ctx, 4, Qibla.intent(ctx), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val n = Notification.Builder(ctx, CHANNEL)
             .setSmallIcon(R.drawable.ic_mosque)
+            .setStyle(Notification.DecoratedCustomViewStyle())
+            .setCustomContentView(small)
+            .setCustomBigContentView(big)
             .setContentTitle(name)
-            .setContentText(line)
-            .setStyle(Notification.BigTextStyle().bigText(big.toString()))
-            .setSubText(c.getString(R.string.remaining, name))
-            .setWhen(t.toInstant().toEpochMilli())
-            .setShowWhen(true)
-            .setUsesChronometer(true)
-            .setChronometerCountDown(true)
+            .setContentText(sub)
+            .setShowWhen(false)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
-            .setColor(0xFF12463A.toInt())
+            .setColor(GOLD)
             .setCategory(Notification.CATEGORY_STATUS)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setContentIntent(open)
+            .addAction(Notification.Action.Builder(null, c.getString(R.string.times_btn), open).build())
+            .addAction(Notification.Action.Builder(null, c.getString(R.string.qibla), qibla).build())
             .build()
         nm.notify(ID, n)
     }

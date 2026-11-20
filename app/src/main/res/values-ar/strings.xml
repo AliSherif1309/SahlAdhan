@@ -93,4 +93,13 @@
     <string name="src_official">✓ مواقيت اليوم: التقويم القطري الرسمي</string>
     <string name="src_pending">مواقيت اليوم: محسوبة (لم تُنزَّل المواقيت الرسمية بعد)</string>
     <string name="src_calc">مواقيت اليوم: محسوبة حسب موقعك</string>
+    <string name="since">مضى على %1$s</string>
+    <string name="since_short">مضى</string>
+    <string name="remaining_short">باقي</string>
+    <string name="times_btn">مواقيت الصلاة</string>
+    <string name="iqama_time">حان وقت إقامة صلاة %1$s</string>
+    <string name="o_since">عدّ تصاعدي ٣٠ دقيقة بعد الأذان</string>
+    <string name="h24">نظام ٢٤ ساعة</string>
+    <string name="iqama">تنبيه الإقامة</string>
+    <string name="iqama_after">دقائق بعد الأذان</string>
 </resources>

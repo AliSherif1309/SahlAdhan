@@ -57,10 +57,21 @@ object Scheduler {
             setAt(ctx, t.toInstant().toEpochMilli(), p)
         }
 
-        // Refresh at the next prayer time or at local midnight, whichever is first
-        val nextPrayer = prefs.nextRow(now).second   // includes Sunrise, so widgets switch at sunrise too
-        val midnight = now.toLocalDate().plusDays(1).atStartOfDay(prefs.zone)
-        val boundary = if (nextPrayer.isBefore(midnight)) nextPrayer else midnight
+        // Iqama alerts (optional): adhan time + minutes, short alert
+        for (i in 0..4) {
+            val p = pi(ctx, 20 + i, Intent(ctx, AlarmReceiver::class.java).setAction(ACTION_ALERT)
+                .putExtra(EXTRA_PRAYER, 10 + i).putExtra(EXTRA_MODE, ALERT_SHORT))
+            if (!prefs.opt("iqama")) { am.cancel(p); continue }
+            val m = prefs.iqamaMin(i).toLong()
+            val t = today[i].plusMinutes(m).let { if (it.isAfter(now)) it else tomorrow[i].plusMinutes(m) }
+            setAt(ctx, t.toInstant().toEpochMilli(), p)
+        }
+
+        // Refresh at the next change: next time (incl. Sunrise), end of a 30-min "since" period, or midnight
+        val shown = prefs.show(now)
+        val candidates = mutableListOf(prefs.nextRow(now).second, now.toLocalDate().plusDays(1).atStartOfDay(prefs.zone))
+        if (shown.since) candidates += shown.time.plusMinutes(30)
+        val boundary = candidates.filter { it.isAfter(now) }.minOrNull()!!
         setAt(ctx, boundary.toInstant().toEpochMilli() + 1000,
             pi(ctx, REQ_REFRESH, Intent(ctx, AlarmReceiver::class.java).setAction(ACTION_REFRESH)))
     }

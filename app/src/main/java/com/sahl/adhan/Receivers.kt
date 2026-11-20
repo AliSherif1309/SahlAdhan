@@ -30,6 +30,7 @@ class AlarmReceiver : BroadcastReceiver() {
                 prayer < 0 -> c.getString(R.string.test_title)
                 prayer == 5 -> c.getString(R.string.sunrise_time)
                 prayer == 6 -> c.getString(R.string.first_adhan)
+                prayer in 10..14 -> c.getString(R.string.iqama_time, Names.of(c, prayer - 10, java.time.LocalDate.now(Prefs(ctx).zone)))
                 else -> c.getString(R.string.time_for, Names.of(c, prayer, java.time.LocalDate.now(Prefs(ctx).zone)))
             }
         }

@@ -326,6 +326,21 @@ class MainActivity : Activity() {
             setPadding(0, (8 * dp).toInt(), 0, (4 * dp).toInt())
             setOnCheckedChangeListener { _, on -> prefs.showBanner = on; Banner.update(this@MainActivity) }
         })
+        // Iqama
+        aCard.addView(Switch(this).apply {
+            text = getString(R.string.iqama); textSize = 15f; setTextColor(c(R.color.text)); font?.let { typeface = it }
+            isChecked = prefs.opt("iqama"); setPadding(0, (8 * dp).toInt(), 0, (4 * dp).toInt())
+            setOnCheckedChangeListener { _, on -> prefs.setOpt("iqama", on); refreshAll() }
+        })
+        if (prefs.opt("iqama")) {
+            val mins = (5..45).toList()
+            for (i in 0..4) {
+                val row = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
+                row.addView(text("   " + Names.of(this, i) + " · " + getString(R.string.iqama_after), 14f, c(R.color.sub)), LinearLayout.LayoutParams(0, -2, 1f))
+                row.addView(spinner(mins.map { "$it" }, mins.indexOf(prefs.iqamaMin(i)).coerceAtLeast(0)) { prefs.setIqamaMin(i, mins[it]); refreshAll() })
+                aCard.addView(row)
+            }
+        }
         soundPicker(aCard, R.string.sound_full, Sounds.full, prefs.fullSound, "custom_full", 10) { prefs.fullSound = it }
         soundPicker(aCard, R.string.sound_short, Sounds.short, prefs.shortSound, "custom_short", 11) { prefs.shortSound = it }
         aCard.addView(Button(this).apply { text = getString(R.string.test_full); setOnClickListener { test(ALERT_FULL) } })
@@ -342,6 +357,11 @@ class MainActivity : Activity() {
             text = getString(label); textSize = 15f; setTextColor(c(R.color.text)); font?.let { typeface = it }
             isChecked = prefs.opt(key); setPadding(0, (6 * dp).toInt(), 0, (6 * dp).toInt())
             setOnCheckedChangeListener { _, on -> prefs.setOpt(key, on); Widgets.updateAll(this@MainActivity) }
+        })
+        oCard.addView(Switch(this).apply {
+            text = getString(R.string.h24); textSize = 15f; setTextColor(c(R.color.text)); font?.let { typeface = it }
+            isChecked = prefs.h24; setPadding(0, (6 * dp).toInt(), 0, (6 * dp).toInt())
+            setOnCheckedChangeListener { _, on -> prefs.h24 = on; refreshAll() }
         })
         Options.widget.forEach { (k, l) -> optSwitch(k, l) }
         oCard.addView(text(getString(R.string.banner_options), 14f, c(R.color.sub), true).apply { setPadding(0, (12 * dp).toInt(), 0, 0) })

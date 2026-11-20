@@ -16,8 +16,9 @@ object Widgets {
     private const val GOLD = 0xFFF5C84C.toInt()
     private const val WHITE = 0xFFFFFFFF.toInt()
 
-    fun fmt(t: ZonedDateTime): String = t.format(DateTimeFormatter.ofPattern("h:mm", Locale.ENGLISH))
-    fun fmt2(t: ZonedDateTime): String = t.format(DateTimeFormatter.ofPattern("hh:mm", Locale.ENGLISH))
+    @Volatile var h24 = false
+    fun fmt(t: ZonedDateTime): String = t.format(DateTimeFormatter.ofPattern(if (h24) "HH:mm" else "h:mm", Locale.ENGLISH))
+    fun fmt2(t: ZonedDateTime): String = t.format(DateTimeFormatter.ofPattern(if (h24) "HH:mm" else "hh:mm", Locale.ENGLISH))
 
     /** Hijri (Umm al-Qura) date in the app language, e.g. ٩ جمادى الآخرة ١٤٤٨ */
     fun hijri(c: Context, day: java.time.LocalDate): String {
@@ -44,17 +45,22 @@ object Widgets {
     private fun openApp(ctx: Context) = PendingIntent.getActivity(
         ctx, 1, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
 
-    private fun countdown(v: RemoteViews, id: Int, t: ZonedDateTime) {
+    /** Live timer drawn by Android: counts down to t, or up from t when [since] */
+    fun countdown(v: RemoteViews, id: Int, t: ZonedDateTime, since: Boolean = false) {
         val ms = t.toInstant().toEpochMilli() - System.currentTimeMillis()
         v.setChronometer(id, SystemClock.elapsedRealtime() + ms, null, true)
-        v.setChronometerCountDown(id, true)
+        v.setChronometerCountDown(id, !since)
     }
+
+    /** "باق على الفجر" or "مضى على الفجر" */
+    fun label(c: Context, s: Prefs.Show) =
+        c.getString(if (s.since) R.string.since else R.string.remaining, Names.row(c, s.row, s.time.toLocalDate()))
 
     fun compact(ctx: Context): RemoteViews {
         val c = ctx.localized()
-        val (r, t) = Prefs(ctx).nextRow()
+        val s = Prefs(ctx).show(); val r = s.row; val t = s.time
         val v = RemoteViews(ctx.packageName, R.layout.widget_compact)
-        v.setTextViewText(R.id.label, c.getString(R.string.next))
+        v.setTextViewText(R.id.label, if (s.since) label(c, s) else c.getString(R.string.next))
         val pr = Prefs(ctx); val today = java.time.LocalDate.now(pr.zone)
         v.setTextViewText(R.id.hijri, hijri(c, today)); v.setViewVisibility(R.id.hijri, vis(pr.opt("hijri")))
         val ex = extraLine(c, pr, today)
@@ -62,7 +68,7 @@ object Widgets {
         v.setViewVisibility(R.id.countdown, vis(pr.opt("countdown")))
         v.setTextViewText(R.id.name, Names.row(c, r, t.toLocalDate()))
         v.setTextViewText(R.id.time, fmt(t))
-        countdown(v, R.id.countdown, t)
+        countdown(v, R.id.countdown, t, s.since)
         v.setOnClickPendingIntent(R.id.root, openApp(ctx))
         return v
     }
@@ -99,7 +105,7 @@ object Widgets {
         val c = ctx.localized()
         val prefs = Prefs(ctx)
         val now = ZonedDateTime.now(prefs.zone)
-        val (nextRow, nextT) = prefs.nextRow(now)
+        val s = prefs.show(now); val nextRow = s.row; val nextT = s.time
         val day = shownDay(prefs, now, nextT)
         val all = prefs.times(day)
         val ar = Names.isArabic(c)
@@ -115,8 +121,8 @@ object Widgets {
             val col = if (row == nextRow) GOLD else WHITE
             v.setTextColor(ls[row], col); v.setTextColor(rs[row], col)
         }
-        v.setTextViewText(R.id.remain, c.getString(R.string.remaining, Names.row(c, nextRow, nextT.toLocalDate())))
-        countdown(v, R.id.countdown, nextT)
+        v.setTextViewText(R.id.remain, label(c, s))
+        countdown(v, R.id.countdown, nextT, s.since)
         v.setTextViewText(R.id.hijri, hijri(c, now.toLocalDate()))
         v.setViewVisibility(R.id.hijri, vis(prefs.opt("hijri")))
         val ex = extraLine(c, prefs, now.toLocalDate())

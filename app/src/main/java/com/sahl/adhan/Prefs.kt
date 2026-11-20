@@ -16,6 +16,27 @@ const val ALERT_OFF = 2
 
 class Prefs(ctx: Context) {
     private val p = ctx.getSharedPreferences("sahl", Context.MODE_PRIVATE)
+    init { Widgets.h24 = p.getBoolean("h24", false) }
+
+    /** 24-hour clock */
+    var h24: Boolean get() = p.getBoolean("h24", false); set(v) { p.edit().putBoolean("h24", v).apply(); Widgets.h24 = v }
+
+    /** Iqama: minutes after the adhan, per prayer (0 Fajr … 4 Isha). Qatar's usual waits by default. */
+    fun iqamaMin(i: Int) = p.getInt("iq$i", intArrayOf(25, 20, 20, 10, 20)[i])
+    fun setIqamaMin(i: Int, v: Int) = p.edit().putInt("iq$i", v).apply()
+
+    /** What the widgets/banner show now: the next time, or "since" the last prayer for 30 minutes */
+    data class Show(val row: Int, val time: ZonedDateTime, val since: Boolean)
+    fun show(now: ZonedDateTime = ZonedDateTime.now(zone)): Show {
+        if (opt("since")) {
+            val all = times(now.toLocalDate())
+            for (r in listOf(5, 4, 3, 2, 0)) {   // latest first; Sunrise isn't a prayer
+                if (!all[r].isAfter(now) && now.isBefore(all[r].plusMinutes(30))) return Show(r, all[r], true)
+            }
+        }
+        val (r, t) = nextRow(now)
+        return Show(r, t, false)
+    }
 
     var cityIndex: Int get() = p.getInt("city", 0); set(v) = p.edit().putInt("city", v).apply()
     var methodIndex: Int get() = p.getInt("method", 0); set(v) = p.edit().putInt("method", v).apply()
@@ -168,12 +189,12 @@ object Sounds {
 /** What the widgets and banner can show. Order = order on the settings screen. */
 object Options {
     val widget = listOf(
-        "hijri" to R.string.o_hijri, "date" to R.string.o_date, "city" to R.string.o_city,
+        "hijri" to R.string.o_hijri, "date" to R.string.o_date, "city" to R.string.o_city, "since" to R.string.o_since,
         "countdown" to R.string.o_countdown, "sunrise" to R.string.o_sunrise, "qibla" to R.string.o_qibla,
     )
     val banner = listOf(
         "b_times" to R.string.o_b_times, "b_hijri" to R.string.o_hijri, "b_after" to R.string.o_b_after,
     )
-    val defaults = mapOf("hijri" to true, "date" to false, "city" to false, "countdown" to true,
+    val defaults = mapOf("since" to true, "iqama" to false, "hijri" to true, "date" to false, "city" to false, "countdown" to true,
         "sunrise" to true, "qibla" to true, "b_times" to true, "b_hijri" to true, "b_after" to true)
 }

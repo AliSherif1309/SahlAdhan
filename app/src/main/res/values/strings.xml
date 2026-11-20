@@ -93,4 +93,13 @@
     <string name="src_official">✓ Today\'s times: official Qatar Calendar House</string>
     <string name="src_pending">Today\'s times: calculated (official times not downloaded yet)</string>
     <string name="src_calc">Today\'s times: calculated from your location</string>
+    <string name="since">Since %1$s</string>
+    <string name="since_short">since</string>
+    <string name="remaining_short">in</string>
+    <string name="times_btn">Prayer times</string>
+    <string name="iqama_time">Iqama for %1$s</string>
+    <string name="o_since">Count up for 30 min after each adhan</string>
+    <string name="h24">24-hour clock</string>
+    <string name="iqama">Iqama alert</string>
+    <string name="iqama_after">minutes after adhan</string>
 </resources>
