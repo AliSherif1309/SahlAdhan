@@ -56,6 +56,10 @@ object Banner {
 
         // Subtitle: city · Hijri · then …
         val all = prefs.times(day)
+        val subShort = buildList {
+            add(prefs.city.let { if (ar) it.ar else it.en })
+            if (prefs.opt("b_hijri")) add(Widgets.hijri(c, now.toLocalDate()))
+        }.joinToString("  ·  ")
         val sub = buildList {
             add(prefs.city.let { if (ar) it.ar else it.en })
             if (prefs.opt("b_hijri")) add(Widgets.hijri(c, now.toLocalDate()))
@@ -74,7 +78,7 @@ object Banner {
             v.setTextViewText(R.id.b_left, if (ar) label else title)
             v.setTextColor(if (ar) R.id.b_left else R.id.b_right, 0xCCFFFFFF.toInt())
             Widgets.countdown(v, R.id.b_timer, s.time, s.since)
-            v.setTextViewText(R.id.b_sub, sub)
+            v.setTextViewText(R.id.b_sub, if (big) sub else subShort)
             if (!big) return
             val labels = intArrayOf(R.string.fajr, R.string.sunrise, R.string.dhuhr, R.string.asr, R.string.maghrib, R.string.isha)
             val cells = intArrayOf(R.id.c0, R.id.c1, R.id.c2, R.id.c3, R.id.c4, R.id.c5)
@@ -101,7 +105,7 @@ object Banner {
             .setCustomContentView(small)
             .setCustomBigContentView(big)
             .setContentTitle(name)
-            .setContentText(sub)
+            .setContentText(subShort)
             .setShowWhen(false)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
