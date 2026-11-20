@@ -83,16 +83,16 @@ object Scheduler {
     }
 
     /** Short alerts: one notification channel per sound (Android fixes a channel's sound). */
-    fun shortChannelId(ctx: Context) = "short_" + Prefs(ctx).shortSound
+    fun shortChannelId(ctx: Context, key: String = Prefs(ctx).shortSound) = "short_$key"
 
-    fun ensureChannels(ctx: Context) {
+    fun ensureChannels(ctx: Context, shortKey: String? = null) {
         val nm = ctx.getSystemService(NotificationManager::class.java)
         val c = ctx.localized()
         val playing = NotificationChannel("adhan_playing", c.getString(R.string.playing), NotificationManager.IMPORTANCE_HIGH).apply {
             setSound(null, null); enableVibration(true); setBypassDnd(true)
         }
         nm.createNotificationChannel(playing)
-        val key = Prefs(ctx).shortSound
+        val key = shortKey ?: Prefs(ctx).shortSound
         val label = Sounds.short.firstOrNull { it.key == key }?.label ?: R.string.alert_short
         val short = NotificationChannel("short_$key", c.getString(R.string.alert_short) + " · " + c.getString(label),
             NotificationManager.IMPORTANCE_HIGH).apply {

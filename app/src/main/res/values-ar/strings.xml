@@ -102,4 +102,5 @@
     <string name="h24">نظام ٢٤ ساعة</string>
     <string name="iqama">تنبيه الإقامة</string>
     <string name="iqama_after">دقائق بعد الأذان</string>
+    <string name="sound_iqama">صوت الإقامة</string>
 </resources>

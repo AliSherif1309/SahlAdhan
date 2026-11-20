@@ -73,11 +73,11 @@ class MainActivity : Activity() {
     override fun onActivityResult(req: Int, res: Int, data: Intent?) {
         super.onActivityResult(req, res, data)
         val uri = data?.data ?: return
-        if (res != RESULT_OK || (req != 10 && req != 11)) return
-        val key = if (req == 10) "custom_full" else "custom_short"
+        if (res != RESULT_OK || req !in 10..12) return
+        val key = when (req) { 10 -> "custom_full"; 11 -> "custom_short"; else -> "custom_iqama" }
         try {
             contentResolver.openInputStream(uri)!!.use { inp -> Sounds.customFile(this, key).outputStream().use { inp.copyTo(it) } }
-            if (req == 10) prefs.fullSound = key else prefs.shortSound = key
+            when (req) { 10 -> prefs.fullSound = key; 11 -> prefs.shortSound = key; else -> prefs.iqamaSound = key }
             Toast.makeText(this, getString(R.string.custom_saved), Toast.LENGTH_SHORT).show()
         } catch (e: Exception) { Toast.makeText(this, "✗", Toast.LENGTH_SHORT).show() }
         refreshAll()
@@ -340,6 +340,7 @@ class MainActivity : Activity() {
                 row.addView(spinner(mins.map { "$it" }, mins.indexOf(prefs.iqamaMin(i)).coerceAtLeast(0)) { prefs.setIqamaMin(i, mins[it]); refreshAll() })
                 aCard.addView(row)
             }
+            soundPicker(aCard, R.string.sound_iqama, Sounds.short, prefs.iqamaSound, "custom_iqama", 12) { prefs.iqamaSound = it }
         }
         soundPicker(aCard, R.string.sound_full, Sounds.full, prefs.fullSound, "custom_full", 10) { prefs.fullSound = it }
         soundPicker(aCard, R.string.sound_short, Sounds.short, prefs.shortSound, "custom_short", 11) { prefs.shortSound = it }

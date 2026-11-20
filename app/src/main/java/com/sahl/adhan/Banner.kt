@@ -85,6 +85,10 @@ object Banner {
             Widgets.countdown(v, R.id.b_timer, s.time, s.since)
             v.setTextViewText(R.id.b_sub, if (big) sub else subShort)
             if (!big) return
+            val showStrip = prefs.opt("b_times")
+            val vis = if (showStrip) android.view.View.VISIBLE else android.view.View.GONE
+            v.setViewVisibility(R.id.b_strip, vis); v.setViewVisibility(R.id.b_div, vis)
+            if (!showStrip) return
             val labels = intArrayOf(R.string.fajr, R.string.sunrise, R.string.dhuhr, R.string.asr, R.string.maghrib, R.string.isha)
             val cells = intArrayOf(R.id.c0, R.id.c1, R.id.c2, R.id.c3, R.id.c4, R.id.c5)
             val ns = intArrayOf(R.id.cn0, R.id.cn1, R.id.cn2, R.id.cn3, R.id.cn4, R.id.cn5)

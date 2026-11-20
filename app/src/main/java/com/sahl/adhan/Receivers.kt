@@ -37,12 +37,13 @@ class AlarmReceiver : BroadcastReceiver() {
 
         fun shortAlert(ctx: Context, prayer: Int) {
             // Your own short sound plays through the player (Android channels can't use private files)
-            val key = Prefs(ctx).shortSound
+            // Iqama alerts (10..14) have their own sound
+            val key = if (prayer in 10..14) Prefs(ctx).iqamaSound else Prefs(ctx).shortSound
             if (Sounds.isCustom(key) && AdhanService.start(ctx, prayer, key)) return
-            Scheduler.ensureChannels(ctx)
+            Scheduler.ensureChannels(ctx, key)
             val c = ctx.localized()
             val open = PendingIntent.getActivity(ctx, 0, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
-            val n = Notification.Builder(ctx, Scheduler.shortChannelId(ctx))
+            val n = Notification.Builder(ctx, Scheduler.shortChannelId(ctx, key))
                 .setSmallIcon(R.drawable.ic_mosque)
                 .setContentTitle(title(ctx, prayer))
                 .setContentText(Prefs(ctx).city.let { if (Names.isArabic(c)) it.ar else it.en })

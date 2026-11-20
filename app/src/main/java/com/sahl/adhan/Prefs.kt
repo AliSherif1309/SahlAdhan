@@ -52,6 +52,8 @@ class Prefs(ctx: Context) {
     fun opt(key: String) = p.getBoolean("opt_$key", Options.defaults[key] ?: true)
     fun setOpt(key: String, v: Boolean) = p.edit().putBoolean("opt_$key", v).apply()
 
+    var iqamaSound: String get() = p.getString("iqamaSound", "chime_soft") ?: "chime_soft"; set(v) = p.edit().putString("iqamaSound", v).apply()
+
     fun adj(i: Int) = p.getInt("adj$i", 0)
     fun setAdj(i: Int, v: Int) = p.edit().putInt("adj$i", v).apply()
     /** i = 0..4 prayers, 5 = sunrise, 6 = first Friday adhan (default: short alert) */
