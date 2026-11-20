@@ -12,7 +12,7 @@
         </LinearLayout>
         <TextView android:id="@+id/b_sub" android:fontFamily="@font/thmanyah" android:layout_width="match_parent" android:layout_height="wrap_content"
             android:gravity="center" android:textColor="#CCFFFFFF" android:textSize="12sp" android:maxLines="1" android:layout_marginTop="2dp"/>
-        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@drawable/gold_line" android:layout_marginTop="8dp" android:layout_marginBottom="6dp"/>
+        <ImageView android:layout_width="match_parent" android:layout_height="1dp" android:src="@drawable/gold_line" android:scaleType="fitXY" android:layout_marginTop="8dp" android:layout_marginBottom="6dp"/>
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
             <LinearLayout android:id="@+id/c0" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
                 android:orientation="vertical" android:gravity="center" android:paddingTop="5dp" android:paddingBottom="5dp" android:layout_marginLeft="2dp" android:layout_marginRight="2dp">

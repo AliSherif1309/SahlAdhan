@@ -22,6 +22,25 @@ object Banner {
     private const val WHITE = 0xFFFFFFFF.toInt()
 
     fun update(ctx: Context) {
+        try { updateFancy(ctx) } catch (e: Exception) { updatePlain(ctx) }
+    }
+
+    /** Fallback: simple banner (used if the custom card ever fails) */
+    private fun updatePlain(ctx: Context) {
+        val nm = ctx.getSystemService(NotificationManager::class.java)
+        val prefs = Prefs(ctx)
+        if (!prefs.showBanner || !nm.areNotificationsEnabled()) { nm.cancel(ID); return }
+        val c = ctx.localized()
+        val s = prefs.show()
+        val open = PendingIntent.getActivity(ctx, 2, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
+        nm.notify(ID, Notification.Builder(ctx, CHANNEL).setSmallIcon(R.drawable.ic_mosque)
+            .setContentTitle(Names.row(c, s.row, s.time.toLocalDate()) + "  " + Widgets.fmt(s.time))
+            .setWhen(s.time.toInstant().toEpochMilli()).setShowWhen(true).setUsesChronometer(true)
+            .setChronometerCountDown(!s.since).setOngoing(true).setOnlyAlertOnce(true)
+            .setContentIntent(open).build())
+    }
+
+    private fun updateFancy(ctx: Context) {
         val nm = ctx.getSystemService(NotificationManager::class.java)
         val prefs = Prefs(ctx)
         if (!prefs.showBanner || !nm.areNotificationsEnabled()) { nm.cancel(ID); return }
