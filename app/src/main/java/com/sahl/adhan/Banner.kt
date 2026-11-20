@@ -72,11 +72,16 @@ object Banner {
 
         fun fill(v: RemoteViews, big: Boolean) {
             // Name + time on the reading side, label on the other
-            val title = "$name  ${Widgets.fmt(s.time)}"
+            // Arabic reads: الفجر · باقي 7:19:00 · 04:33   (English: Fajr · in 7:19:00 · 4:33)
             val label = c.getString(if (s.since) R.string.since_short else R.string.remaining_short)
-            v.setTextViewText(R.id.b_right, if (ar) title else label)
-            v.setTextViewText(R.id.b_left, if (ar) label else title)
+            val time = Widgets.fmt(s.time)
+            v.setTextViewText(R.id.b_right, if (ar) name else time)
+            v.setTextViewText(R.id.b_left, if (ar) time else name)
             v.setTextColor(if (ar) R.id.b_left else R.id.b_right, 0xCCFFFFFF.toInt())
+            v.setTextViewText(R.id.b_lab_r, if (ar) label else "")
+            v.setTextViewText(R.id.b_lab_l, if (ar) "" else label)
+            v.setViewVisibility(R.id.b_lab_r, if (ar) android.view.View.VISIBLE else android.view.View.GONE)
+            v.setViewVisibility(R.id.b_lab_l, if (ar) android.view.View.GONE else android.view.View.VISIBLE)
             Widgets.countdown(v, R.id.b_timer, s.time, s.since)
             v.setTextViewText(R.id.b_sub, if (big) sub else subShort)
             if (!big) return
