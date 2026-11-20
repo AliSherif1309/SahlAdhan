@@ -56,6 +56,19 @@ class Prefs(ctx: Context) {
         return fard(d)[1].minusMinutes(40)
     }
 
+    /**
+     * Next row of the six-line timetable (0 Fajr, 1 Sunrise, 2 Dhuhr, 3 Asr, 4 Maghrib, 5 Isha).
+     * Includes Sunrise when the Sunrise option is on. Used for countdowns and highlights.
+     */
+    fun nextRow(now: ZonedDateTime = ZonedDateTime.now(zone)): Pair<Int, ZonedDateTime> {
+        val all = times(now.toLocalDate())
+        for (r in 0..5) {
+            if (r == 1 && !opt("sunrise")) continue
+            if (all[r].isAfter(now)) return r to all[r]
+        }
+        return 0 to times(now.toLocalDate().plusDays(1))[0]
+    }
+
     fun next(now: ZonedDateTime = ZonedDateTime.now(zone)): Pair<Int, ZonedDateTime> {
         val today = fard(now.toLocalDate())
         today.forEachIndexed { i, t -> if (t.isAfter(now)) return i to t }
@@ -78,6 +91,10 @@ object Names {
     /** Same as [of] but Dhuhr becomes الجمعة on Fridays */
     fun of(ctx: Context, i: Int, day: java.time.LocalDate) =
         if (i == 1 && day.dayOfWeek == java.time.DayOfWeek.FRIDAY) ctx.getString(R.string.jumuah) else of(ctx, i)
+    /** Name of a six-line row (Sunrise included; Dhuhr → Jumuah on Fridays) */
+    fun row(ctx: Context, r: Int, day: java.time.LocalDate): String = when (r) {
+        0 -> of(ctx, 0); 1 -> ctx.getString(R.string.sunrise); else -> of(ctx, r - 1, day)
+    }
     fun isArabic(ctx: Context) = ctx.resources.configuration.locales[0].language == "ar"
 }
 

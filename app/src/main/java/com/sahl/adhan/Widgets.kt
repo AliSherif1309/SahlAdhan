@@ -52,7 +52,7 @@ object Widgets {
 
     fun compact(ctx: Context): RemoteViews {
         val c = ctx.localized()
-        val (i, t) = Prefs(ctx).next()
+        val (r, t) = Prefs(ctx).nextRow()
         val v = RemoteViews(ctx.packageName, R.layout.widget_compact)
         v.setTextViewText(R.id.label, c.getString(R.string.next))
         val pr = Prefs(ctx); val today = java.time.LocalDate.now(pr.zone)
@@ -60,7 +60,7 @@ object Widgets {
         val ex = extraLine(c, pr, today)
         v.setTextViewText(R.id.extra, ex); v.setViewVisibility(R.id.extra, vis(ex.isNotEmpty()))
         v.setViewVisibility(R.id.countdown, vis(pr.opt("countdown")))
-        v.setTextViewText(R.id.name, Names.of(c, i, t.toLocalDate()))
+        v.setTextViewText(R.id.name, Names.row(c, r, t.toLocalDate()))
         v.setTextViewText(R.id.time, fmt(t))
         countdown(v, R.id.countdown, t)
         v.setOnClickPendingIntent(R.id.root, openApp(ctx))
@@ -99,12 +99,11 @@ object Widgets {
         val c = ctx.localized()
         val prefs = Prefs(ctx)
         val now = ZonedDateTime.now(prefs.zone)
-        val (next, nextT) = prefs.next(now)
+        val (nextRow, nextT) = prefs.nextRow(now)
         val day = shownDay(prefs, now, nextT)
         val all = prefs.times(day)
         val ar = Names.isArabic(c)
         val labels = intArrayOf(R.string.fajr, R.string.sunrise, R.string.dhuhr, R.string.asr, R.string.maghrib, R.string.isha)
-        val nextRow = intArrayOf(0, 2, 3, 4, 5)[next]
         val ls = intArrayOf(R.id.l0, R.id.l1, R.id.l2, R.id.l3, R.id.l4, R.id.l5)
         val rs = intArrayOf(R.id.r0, R.id.r1, R.id.r2, R.id.r3, R.id.r4, R.id.r5)
         val v = RemoteViews(ctx.packageName, R.layout.widget_khatmah)
@@ -116,7 +115,7 @@ object Widgets {
             val col = if (row == nextRow) GOLD else WHITE
             v.setTextColor(ls[row], col); v.setTextColor(rs[row], col)
         }
-        v.setTextViewText(R.id.remain, c.getString(R.string.remaining, Names.of(c, next, nextT.toLocalDate())))
+        v.setTextViewText(R.id.remain, c.getString(R.string.remaining, Names.row(c, nextRow, nextT.toLocalDate())))
         countdown(v, R.id.countdown, nextT)
         v.setTextViewText(R.id.hijri, hijri(c, now.toLocalDate()))
         v.setViewVisibility(R.id.hijri, vis(prefs.opt("hijri")))

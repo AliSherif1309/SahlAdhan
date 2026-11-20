@@ -58,7 +58,7 @@ object Scheduler {
         }
 
         // Refresh at the next prayer time or at local midnight, whichever is first
-        val nextPrayer = prefs.next(now).second
+        val nextPrayer = prefs.nextRow(now).second   // includes Sunrise, so widgets switch at sunrise too
         val midnight = now.toLocalDate().plusDays(1).atStartOfDay(prefs.zone)
         val boundary = if (nextPrayer.isBefore(midnight)) nextPrayer else midnight
         setAt(ctx, boundary.toInstant().toEpochMilli() + 1000,
