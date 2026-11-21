@@ -103,4 +103,6 @@
     <string name="iqama">تنبيه الإقامة</string>
     <string name="iqama_after">دقائق بعد الأذان</string>
     <string name="sound_iqama">صوت الإقامة</string>
+    <string name="stop_volume">إيقاف الأذان بزر خفض الصوت</string>
+    <string name="stop_flip">إيقاف الأذان بقلب الهاتف على وجهه</string>
 </resources>

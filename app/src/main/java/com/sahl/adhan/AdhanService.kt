@@ -12,8 +12,56 @@ import android.os.Build
 import android.os.IBinder
 
 /** Plays the full adhan to the end with a Stop button, even when the phone is locked. */
-class AdhanService : Service() {
+class AdhanService : Service(), android.hardware.SensorEventListener {
     private var player: MediaPlayer? = null
+    private var session: android.media.session.MediaSession? = null
+    private var volumeObserver: android.database.ContentObserver? = null
+    private var sensors: android.hardware.SensorManager? = null
+    private var faceDownSince = 0L
+    private var faceUpSeen = false
+
+    /** Volume down → stop. A media session receives the volume keys even with the screen locked. */
+    private fun listenVolume() {
+        if (!Prefs(this).opt("stop_volume")) return
+        session = android.media.session.MediaSession(this, "SahlAdhan").apply {
+            setPlaybackToRemote(object : android.media.VolumeProvider(VOLUME_CONTROL_RELATIVE, 100, 50) {
+                override fun onAdjustVolume(direction: Int) { if (direction < 0) stopSelf() }
+            })
+            setPlaybackState(android.media.session.PlaybackState.Builder()
+                .setState(android.media.session.PlaybackState.STATE_PLAYING, 0, 1f).build())
+            isActive = true
+        }
+        // Fallback for phones that send the keys elsewhere: any drop in a volume level stops the adhan
+        val am = getSystemService(android.media.AudioManager::class.java)
+        val streams = intArrayOf(android.media.AudioManager.STREAM_ALARM, android.media.AudioManager.STREAM_RING,
+            android.media.AudioManager.STREAM_MUSIC, android.media.AudioManager.STREAM_NOTIFICATION)
+        val start = streams.map { am.getStreamVolume(it) }
+        volumeObserver = object : android.database.ContentObserver(android.os.Handler(mainLooper)) {
+            override fun onChange(selfChange: Boolean) {
+                if (streams.indices.any { am.getStreamVolume(streams[it]) < start[it] }) stopSelf()
+            }
+        }
+        contentResolver.registerContentObserver(android.provider.Settings.System.CONTENT_URI, true, volumeObserver!!)
+    }
+
+    /** Turn the phone face down (screen on the table) for about a second → stop */
+    private fun listenFaceDown() {
+        if (!Prefs(this).opt("stop_flip")) return
+        val sm = getSystemService(android.hardware.SensorManager::class.java)
+        val acc = sm.getDefaultSensor(android.hardware.Sensor.TYPE_ACCELEROMETER) ?: return
+        sensors = sm
+        sm.registerListener(this, acc, android.hardware.SensorManager.SENSOR_DELAY_NORMAL)
+    }
+
+    override fun onSensorChanged(e: android.hardware.SensorEvent) {
+        val z = e.values[2]
+        if (z > 3f) { faceUpSeen = true; faceDownSince = 0L; return }   // must start face up (not already lying face down)
+        if (faceUpSeen && z < -8.5f) {
+            if (faceDownSince == 0L) faceDownSince = android.os.SystemClock.elapsedRealtime()
+            else if (android.os.SystemClock.elapsedRealtime() - faceDownSince > 800) stopSelf()
+        } else faceDownSince = 0L
+    }
+    override fun onAccuracyChanged(s: android.hardware.Sensor?, a: Int) {}
 
     companion object {
         const val ACTION_STOP = "com.sahl.adhan.STOP"
@@ -56,11 +104,15 @@ class AdhanService : Service() {
                 prepare(); start()
             }
         } catch (e: Exception) { stopSelf(); null }
+        if (player != null && session == null) { listenVolume(); listenFaceDown() }
         return START_NOT_STICKY
     }
 
     override fun onDestroy() {
         player?.release(); player = null
+        session?.release(); session = null
+        volumeObserver?.let { contentResolver.unregisterContentObserver(it) }; volumeObserver = null
+        sensors?.unregisterListener(this); sensors = null
         stopForeground(STOP_FOREGROUND_REMOVE)
         super.onDestroy()
     }
