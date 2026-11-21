@@ -61,5 +61,6 @@
         <!-- Sahl Union: prayer times for Sahl Phone (prayer-time silence) -->
         <provider android:name=".UnionProvider" android:authorities="com.sahl.adhan.union"
             android:exported="true" android:readPermission="com.sahl.permission.UNION" />
+        <activity android:name=".SahlCrashActivity" android:exported="false" android:process=":crash" />
     </application>
 </manifest>

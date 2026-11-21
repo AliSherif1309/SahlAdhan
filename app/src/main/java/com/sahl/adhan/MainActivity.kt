@@ -144,6 +144,7 @@ class MainActivity : Activity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        SahlCore.catchCrashes(this)
         super.onCreate(savedInstanceState)
         prefs = Prefs(this)
         Scheduler.ensureChannels(this)
