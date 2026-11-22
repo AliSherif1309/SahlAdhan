@@ -49,23 +49,30 @@ object Banner {
             setSound(null, null); enableVibration(false); setShowBadge(false)
         })
         val now = ZonedDateTime.now(prefs.zone)
+        val today = now.toLocalDate()
         val s = prefs.show(now)
-        val day = s.time.toLocalDate()
+        val shownDate = s.time.toLocalDate()
         val ar = Names.isArabic(c)
-        val name = Names.row(c, s.row, day)
+        val name = Names.row(c, s.row, shownDate)
 
-        // Subtitle: city · Hijri · then …
-        val all = prefs.times(day)
+        // Expanded strip always shows today's times, matching inside the app
+        val todayTimes = prefs.times(today)
+        val shownTimes = if (shownDate == today) todayTimes else prefs.times(shownDate)
         val subShort = buildList {
             add(prefs.city.let { if (ar) it.ar else it.en })
-            if (prefs.opt("b_hijri")) add(Widgets.hijri(c, now.toLocalDate()))
+            if (prefs.opt("b_hijri")) add(Widgets.hijri(c, today))
         }.joinToString("  ·  ")
         val sub = buildList {
             add(prefs.city.let { if (ar) it.ar else it.en })
-            if (prefs.opt("b_hijri")) add(Widgets.hijri(c, now.toLocalDate()))
+            if (prefs.opt("b_hijri")) add(Widgets.hijri(c, today))
             if (prefs.opt("b_after")) {
-                val nr = if (s.since) prefs.nextRow(now) else (if (s.row < 5) (s.row + 1) to all[s.row + 1]
-                         else 0 to prefs.times(day.plusDays(1))[0])
+                val nr = if (s.since) {
+                    prefs.nextRow(now)
+                } else {
+                    var nextR = s.row + 1
+                    if (nextR == 1 && !prefs.opt("sunrise")) nextR = 2
+                    if (nextR <= 5) nextR to shownTimes[nextR] else 0 to prefs.times(shownDate.plusDays(1))[0]
+                }
                 add(c.getString(R.string.then) + " " + Names.row(c, nr.first, nr.second.toLocalDate()) + " " + Widgets.fmt(nr.second))
             }
         }.joinToString("  ·  ")
@@ -95,9 +102,9 @@ object Banner {
             val ts = intArrayOf(R.id.ct0, R.id.ct1, R.id.ct2, R.id.ct3, R.id.ct4, R.id.ct5)
             for (slot in 0..5) {
                 val r = if (ar) 5 - slot else slot   // Arabic: Fajr on the right
-                val hi = r == s.row
-                v.setTextViewText(ns[slot], if (r == 2) Names.of(c, 1, day) else c.getString(labels[r]))
-                v.setTextViewText(ts[slot], Widgets.fmt(all[r]))
+                val hi = r == s.row && shownDate == today
+                v.setTextViewText(ns[slot], if (r == 2) Names.of(c, 1, today) else c.getString(labels[r]))
+                v.setTextViewText(ts[slot], Widgets.fmt(todayTimes[r]))
                 v.setInt(cells[slot], "setBackgroundResource", if (hi) R.drawable.pill_gold else R.drawable.pill_none)
                 v.setTextColor(ns[slot], if (hi) DARK else 0xD9FFFFFF.toInt())
                 v.setTextColor(ts[slot], if (hi) DARK else WHITE)

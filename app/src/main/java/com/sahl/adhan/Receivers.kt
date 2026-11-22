@@ -66,6 +66,7 @@ class SystemReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
         Scheduler.scheduleAll(ctx)
         Widgets.updateAll(ctx)
+        Official.syncIfNeeded(ctx)
         AutoLocation.checkIfNeeded(ctx, force = intent.action == Intent.ACTION_TIMEZONE_CHANGED, background = true)
     }
 }

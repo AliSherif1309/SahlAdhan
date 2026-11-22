@@ -178,9 +178,9 @@ class MainActivity : Activity() {
     private var updateMsg: String? = null
 
     override fun onResume() {
-        super.onResume(); Scheduler.scheduleAll(this); render()
-        Official.syncIfNeeded(this) { ok -> if (ok) runOnUiThread { render() } }
-        AutoLocation.checkIfNeeded(this) { runOnUiThread { render() } }
+        super.onResume(); Scheduler.scheduleAll(this); Widgets.updateAll(this); render()
+        Official.syncIfNeeded(this) { ok -> if (ok) runOnUiThread { Widgets.updateAll(this); render() } }
+        AutoLocation.checkIfNeeded(this) { runOnUiThread { Widgets.updateAll(this); render() } }
         if (!checked) { checked = true; checkUpdates(false) }
     }
 
@@ -417,7 +417,7 @@ class MainActivity : Activity() {
         fun optSwitch(key: String, label: Int) = oCard.addView(Switch(this).apply {
             text = getString(label); textSize = 15f; setTextColor(c(R.color.text)); font?.let { typeface = it }
             isChecked = prefs.opt(key); setPadding(0, (6 * dp).toInt(), 0, (6 * dp).toInt())
-            setOnCheckedChangeListener { _, on -> prefs.setOpt(key, on); Widgets.updateAll(this@MainActivity) }
+            setOnCheckedChangeListener { _, on -> prefs.setOpt(key, on); Scheduler.scheduleAll(this@MainActivity); Widgets.updateAll(this@MainActivity) }
         })
         oCard.addView(Switch(this).apply {
             text = getString(R.string.h24); textSize = 15f; setTextColor(c(R.color.text)); font?.let { typeface = it }
