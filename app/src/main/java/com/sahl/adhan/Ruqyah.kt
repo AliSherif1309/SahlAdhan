@@ -191,9 +191,13 @@ class RuqyahActivity : Activity() {
 
 /** Opens Sahl Qibla if installed, otherwise its download page. */
 object Qibla {
-    const val PKG = "com.aly.trueqibla"
+    const val PKG = "com.sahl.qibla"
+    const val LEGACY_PKG = "com.aly.trueqibla"
     const val RELEASES = "https://github.com/AliSherif1309/TrueQibla-Android/releases/latest"
-    fun intent(ctx: Context): Intent =
-        (ctx.packageManager.getLaunchIntentForPackage(PKG) ?: Intent(Intent.ACTION_VIEW, Uri.parse(RELEASES)))
+    fun intent(ctx: Context): Intent {
+        val pm = ctx.packageManager
+        val launch = pm.getLaunchIntentForPackage(PKG) ?: pm.getLaunchIntentForPackage(LEGACY_PKG)
+        return (launch ?: Intent(Intent.ACTION_VIEW, Uri.parse(RELEASES)))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
 }
