@@ -49,7 +49,7 @@ class AlarmReceiver : BroadcastReceiver() {
             val c = ctx.localized()
             val open = PendingIntent.getActivity(ctx, 0, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
             val n = Notification.Builder(ctx, Scheduler.shortChannelId(ctx, key))
-                .setSmallIcon(R.drawable.ic_mosque)
+                .setSmallIcon(R.drawable.ic_sahl_notif)
                 .setContentTitle(title(ctx, prayer))
                 .setContentText(Prefs(ctx).city.let { if (Names.isArabic(c)) it.ar else it.en })
                 .setCategory(Notification.CATEGORY_REMINDER)

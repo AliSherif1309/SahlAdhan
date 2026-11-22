@@ -307,7 +307,7 @@ class AdhanService : Service(), SensorEventListener {
             PendingIntent.FLAG_IMMUTABLE)
         val open = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
         val n = Notification.Builder(this, "adhan_playing")
-            .setSmallIcon(R.drawable.ic_mosque)
+            .setSmallIcon(R.drawable.ic_sahl_notif)
             .setContentTitle(AlarmReceiver.title(this, prayer))
             .setContentText(Prefs(this).city.let { if (Names.isArabic(c)) it.ar else it.en })
             .setCategory(Notification.CATEGORY_ALARM)
