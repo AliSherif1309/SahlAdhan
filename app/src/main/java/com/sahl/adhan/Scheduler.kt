@@ -57,10 +57,10 @@ object Scheduler {
             setAt(ctx, t.toInstant().toEpochMilli(), p)
         }
 
-        // Iqama alerts (optional): adhan time + minutes, short alert
+        // Iqama alerts (optional): adhan time + minutes, played via AdhanService so stop methods work
         for (i in 0..4) {
             val p = pi(ctx, 20 + i, Intent(ctx, AlarmReceiver::class.java).setAction(ACTION_ALERT)
-                .putExtra(EXTRA_PRAYER, 10 + i).putExtra(EXTRA_MODE, ALERT_SHORT))
+                .putExtra(EXTRA_PRAYER, 10 + i).putExtra(EXTRA_MODE, ALERT_IQAMA))
             if (!prefs.opt("iqama")) { am.cancel(p); continue }
             val m = prefs.iqamaMin(i).toLong()
             val t = today[i].plusMinutes(m).let { if (it.isAfter(now)) it else tomorrow[i].plusMinutes(m) }
@@ -78,7 +78,7 @@ object Scheduler {
 
     fun scheduleTest(ctx: Context, mode: Int) {
         val intent = Intent(ctx, AlarmReceiver::class.java).setAction(ACTION_ALERT)
-            .putExtra(EXTRA_PRAYER, -1).putExtra(EXTRA_MODE, mode)
+            .putExtra(EXTRA_PRAYER, if (mode == ALERT_IQAMA) -2 else -1).putExtra(EXTRA_MODE, mode)
         setAt(ctx, System.currentTimeMillis() + 60_000, pi(ctx, REQ_TEST + mode, intent))
     }
 

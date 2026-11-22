@@ -103,6 +103,8 @@
     <string name="iqama">Iqama alert</string>
     <string name="iqama_after">minutes after adhan</string>
     <string name="sound_iqama">Iqama sound</string>
-    <string name="stop_volume">Stop the adhan with volume down</string>
-    <string name="stop_flip">Stop the adhan by turning the phone face down</string>
+    <string name="test_iqama">Test iqama (1 min)</string>
+    <string name="test_iqama_title">Sahl Adhan · Iqama test</string>
+    <string name="stop_volume">Stop adhan &amp; iqama with volume down</string>
+    <string name="stop_flip">Stop adhan &amp; iqama by turning the phone face down</string>
 </resources>

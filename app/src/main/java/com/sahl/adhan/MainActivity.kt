@@ -15,6 +15,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.View
 import android.widget.*
 import java.time.ZonedDateTime
@@ -30,9 +31,24 @@ class MainActivity : Activity() {
     private fun c(id: Int) = getColor(id)
 
     private var preview: MediaPlayer? = null
+    private var volDownConsumed = false
     private val font by lazy { try { resources.getFont(R.font.thmanyah) } catch (e: Exception) { null } }
 
     override fun attachBaseContext(newBase: Context) { super.attachBaseContext(newBase.localized()) }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+            if (event.action == KeyEvent.ACTION_DOWN && AdhanService.handleVolumeDown(this)) {
+                volDownConsumed = true
+                return true
+            }
+            if (event.action == KeyEvent.ACTION_UP && volDownConsumed) {
+                volDownConsumed = false
+                return true
+            }
+        }
+        return super.dispatchKeyEvent(event)
+    }
 
     override fun onPause() { super.onPause(); stopPreview() }
 
@@ -353,6 +369,9 @@ class MainActivity : Activity() {
         soundPicker(aCard, R.string.sound_short, Sounds.short, prefs.shortSound, "custom_short", 11) { prefs.shortSound = it }
         aCard.addView(Button(this).apply { text = getString(R.string.test_full); setOnClickListener { test(ALERT_FULL) } })
         aCard.addView(Button(this).apply { text = getString(R.string.test_short); setOnClickListener { test(ALERT_SHORT) } })
+        if (prefs.opt("iqama")) {
+            aCard.addView(Button(this).apply { text = getString(R.string.test_iqama); setOnClickListener { test(ALERT_IQAMA) } })
+        }
         aCard.addView(text(getString(R.string.battery_tip), 12f, c(R.color.sub)).apply {
             setPadding(0, (6 * dp).toInt(), 0, 0)
             setOnClickListener { startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))) }

@@ -13,6 +13,7 @@ import java.util.Locale
 const val ALERT_FULL = 0
 const val ALERT_SHORT = 1
 const val ALERT_OFF = 2
+const val ALERT_IQAMA = 3
 
 class Prefs(ctx: Context) {
     private val p = ctx.getSharedPreferences("sahl", Context.MODE_PRIVATE)

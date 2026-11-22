@@ -14,6 +14,10 @@ class AlarmReceiver : BroadcastReceiver() {
             val mode = intent.getIntExtra(Scheduler.EXTRA_MODE, ALERT_SHORT)
             when (mode) {
                 ALERT_FULL -> if (!AdhanService.start(ctx, prayer)) shortAlert(ctx, prayer)
+                ALERT_IQAMA -> {
+                    val key = Prefs(ctx).iqamaSound
+                    if (!AdhanService.start(ctx, prayer, key)) shortAlert(ctx, prayer, key)
+                }
                 ALERT_SHORT -> shortAlert(ctx, prayer)
             }
         }
@@ -27,6 +31,7 @@ class AlarmReceiver : BroadcastReceiver() {
         fun title(ctx: Context, prayer: Int): String {
             val c = ctx.localized()
             return when {
+                prayer == -2 -> c.getString(R.string.test_iqama_title)
                 prayer < 0 -> c.getString(R.string.test_title)
                 prayer == 5 -> c.getString(R.string.sunrise_time)
                 prayer == 6 -> c.getString(R.string.first_adhan)
@@ -35,11 +40,10 @@ class AlarmReceiver : BroadcastReceiver() {
             }
         }
 
-        fun shortAlert(ctx: Context, prayer: Int) {
-            // Your own short sound plays through the player (Android channels can't use private files)
-            // Iqama alerts (10..14) have their own sound
-            val key = if (prayer in 10..14) Prefs(ctx).iqamaSound else Prefs(ctx).shortSound
-            if (Sounds.isCustom(key) && AdhanService.start(ctx, prayer, key)) return
+        fun shortAlert(ctx: Context, prayer: Int, soundKey: String? = null) {
+            // Your own short sound and Iqama alerts play through AdhanService so Stop / volume down / flip all work
+            val key = soundKey ?: if (prayer in 10..14) Prefs(ctx).iqamaSound else Prefs(ctx).shortSound
+            if (soundKey == null && (prayer in 10..14 || Sounds.isCustom(key)) && AdhanService.start(ctx, prayer, key)) return
             Scheduler.ensureChannels(ctx, key)
             val c = ctx.localized()
             val open = PendingIntent.getActivity(ctx, 0, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)

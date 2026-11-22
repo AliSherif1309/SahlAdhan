@@ -8,6 +8,7 @@ import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity
+import android.view.KeyEvent
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -33,7 +34,23 @@ class RuqyahActivity : Activity() {
         )
     }
 
+    private var volDownConsumed = false
+
     override fun attachBaseContext(newBase: Context) { super.attachBaseContext(newBase.localized()) }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+            if (event.action == KeyEvent.ACTION_DOWN && AdhanService.handleVolumeDown(this)) {
+                volDownConsumed = true
+                return true
+            }
+            if (event.action == KeyEvent.ACTION_UP && volDownConsumed) {
+                volDownConsumed = false
+                return true
+            }
+        }
+        return super.dispatchKeyEvent(event)
+    }
 
     private val dp get() = resources.displayMetrics.density
     private val font by lazy { try { resources.getFont(R.font.thmanyah) } catch (e: Exception) { null } }
