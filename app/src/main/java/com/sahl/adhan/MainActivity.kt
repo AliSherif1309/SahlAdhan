@@ -184,6 +184,8 @@ class MainActivity : Activity() {
         if (!checked) { checked = true; checkUpdates(false) }
     }
 
+    private var updatePrompted = false
+
     private fun checkUpdates(manual: Boolean) {
         if (manual) { updateMsg = getString(R.string.checking); render() }
         Thread {
@@ -192,6 +194,18 @@ class MainActivity : Activity() {
                 newer = r
                 updateMsg = if (r == null && manual) getString(R.string.up_to_date) else null
                 render()
+                if (r != null && (manual || !updatePrompted) && !isFinishing && !isDestroyed) {
+                    updatePrompted = true
+                    android.app.AlertDialog.Builder(this)
+                        .setTitle(getString(R.string.update_available, r.name))
+                        .setMessage(r.notes.ifBlank { getString(R.string.install_update) })
+                        .setPositiveButton(R.string.install_update) { _, _ ->
+                            Updater.downloadAndInstall(this, r)
+                            Toast.makeText(this, getString(R.string.downloading), Toast.LENGTH_LONG).show()
+                        }
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show()
+                }
                 if (manual) {
                     Toast.makeText(this, if (r != null) getString(R.string.update_available, r.name)
                                          else getString(R.string.up_to_date), Toast.LENGTH_LONG).show()
