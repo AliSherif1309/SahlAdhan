@@ -16,10 +16,23 @@ import java.time.ZonedDateTime
  */
 object Banner {
     private const val ID = 600
-    private const val CHANNEL = "banner"
+    private const val CHANNEL = "banner_v2"
+    private const val OLD_CHANNEL = "banner"
     private const val GOLD = 0xFFF5C84C.toInt()
     private const val DARK = 0xFF0A231D.toInt()
     private const val WHITE = 0xFFFFFFFF.toInt()
+
+    private fun ensureChannel(nm: NotificationManager, c: Context) {
+        try { nm.deleteNotificationChannel(OLD_CHANNEL) } catch (_: Exception) {}
+        nm.createNotificationChannel(
+            NotificationChannel(CHANNEL, c.getString(R.string.banner), NotificationManager.IMPORTANCE_DEFAULT).apply {
+                setSound(null, null)
+                enableVibration(false)
+                setShowBadge(false)
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            }
+        )
+    }
 
     fun update(ctx: Context) {
         try { updateFancy(ctx) } catch (e: Exception) { updatePlain(ctx) }
@@ -31,12 +44,15 @@ object Banner {
         val prefs = Prefs(ctx)
         if (!prefs.showBanner || !nm.areNotificationsEnabled()) { nm.cancel(ID); return }
         val c = ctx.localized()
+        ensureChannel(nm, c)
         val s = prefs.show()
         val open = PendingIntent.getActivity(ctx, 2, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
         nm.notify(ID, Notification.Builder(ctx, CHANNEL).setSmallIcon(R.drawable.ic_mosque)
             .setContentTitle(Names.row(c, s.row, s.time.toLocalDate()) + "  " + Widgets.fmt(s.time))
             .setWhen(s.time.toInstant().toEpochMilli()).setShowWhen(true).setUsesChronometer(true)
             .setChronometerCountDown(!s.since).setOngoing(true).setOnlyAlertOnce(true)
+            .setCategory(Notification.CATEGORY_STATUS)
+            .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setContentIntent(open).build())
     }
 
@@ -45,9 +61,7 @@ object Banner {
         val prefs = Prefs(ctx)
         if (!prefs.showBanner || !nm.areNotificationsEnabled()) { nm.cancel(ID); return }
         val c = ctx.localized()
-        nm.createNotificationChannel(NotificationChannel(CHANNEL, c.getString(R.string.banner), NotificationManager.IMPORTANCE_LOW).apply {
-            setSound(null, null); enableVibration(false); setShowBadge(false)
-        })
+        ensureChannel(nm, c)
         val now = ZonedDateTime.now(prefs.zone)
         val today = now.toLocalDate()
         val s = prefs.show(now)
