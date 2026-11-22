@@ -444,7 +444,8 @@ class MainActivity : Activity() {
 
         // Calculation settings
         val sCard = card()
-        sCard.addView(text(getString(R.string.settings), 14f, c(R.color.sub), true))
+        val goldHdr = if ((resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES) 0xFFF5C84C.toInt() else 0xFFB88922.toInt()
+        sCard.addView(text(getString(R.string.settings), 14f, goldHdr, true))
         sCard.addView(text(getString(R.string.method), 13f, c(R.color.text)))
         sCard.addView(spinner(PrayerCalc.methods.map { if (ar) it.nameAr else it.name }, prefs.methodIndex) { prefs.methodIndex = it; refreshAll() })
         sCard.addView(text(getString(R.string.asr_method), 13f, c(R.color.text)))
@@ -463,6 +464,9 @@ class MainActivity : Activity() {
         vCard.addView(text(getString(R.string.version, BuildConfig.VERSION_NAME), 14f, c(R.color.sub), true))
         updateMsg?.let { vCard.addView(text(it, 13f, c(R.color.text))) }
         vCard.addView(Button(this).apply { text = getString(R.string.check_updates); setOnClickListener { checkUpdates(true) } })
+        val uCard = card()
+        uCard.addView(text(if (ar) "اتحاد سهل" else "Sahl Union", 13f, goldHdr, true))
+        uCard.addView(SahlUnionApps.strip(this, c(R.color.sub)))
     }
 
     private fun askNotif() {
