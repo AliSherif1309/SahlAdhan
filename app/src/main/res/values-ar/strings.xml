@@ -107,4 +107,10 @@
     <string name="test_iqama_title">تجربة الإقامة · سهل للأذان</string>
     <string name="stop_volume">إيقاف الأذان والإقامة بزر خفض الصوت</string>
     <string name="stop_flip">إيقاف الأذان والإقامة بقلب الهاتف على وجهه</string>
+    <string name="auto_location">تحديث الموقع تلقائياً</string>
+    <string name="need_loc">اضغط للسماح بالموقع لتحديث مدينتك تلقائياً.</string>
+    <string name="need_bg_loc">اضغط للسماح بالموقع في الخلفية لتحديث مدينتك تلقائياً حتى والتطبيق مغلق.</string>
+    <string name="loc_channel">تحديثات الموقع</string>
+    <string name="loc_updated_title">تم تحديث الموقع: %1$s</string>
+    <string name="loc_updated_body">تم تحديث مواقيت الصلاة حسب موقعك الحالي</string>
 </resources>

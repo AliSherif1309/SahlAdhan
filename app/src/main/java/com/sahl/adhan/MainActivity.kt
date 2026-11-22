@@ -151,6 +151,7 @@ class MainActivity : Activity() {
                         else {
                             val labels = res.map { x -> listOfNotNull(x.locality ?: x.featureName, x.adminArea, x.countryName).distinct().joinToString("، ") }
                             android.app.AlertDialog.Builder(this).setItems(labels.toTypedArray()) { _, i ->
+                                prefs.setOpt("auto_location", false)
                                 saveLocation(res[i].latitude, res[i].longitude, res[i].locality ?: res[i].featureName ?: labels[i])
                             }.show()
                         }
@@ -179,6 +180,7 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume(); Scheduler.scheduleAll(this); render()
         Official.syncIfNeeded(this) { ok -> if (ok) runOnUiThread { render() } }
+        AutoLocation.checkIfNeeded(this) { runOnUiThread { render() } }
         if (!checked) { checked = true; checkUpdates(false) }
     }
 
@@ -299,12 +301,44 @@ class MainActivity : Activity() {
         cityCard.addView(text(getString(R.string.city), 14f, c(R.color.sub), true))
         val names = PrayerCalc.cities.map { if (ar) it.ar else it.en } + listOfNotNull(prefs.custom?.en)
         cityCard.addView(spinner(names, prefs.cityIndex.coerceIn(0, names.lastIndex)) {
+            if (it < PrayerCalc.cities.size) prefs.setOpt("auto_location", false)
             prefs.cityIndex = it; Official.syncIfNeeded(this, force = true) { runOnUiThread { refreshAll() } }; refreshAll()
         })
         val locRow = LinearLayout(this)
         locRow.addView(Button(this).apply { text = getString(R.string.my_location); setOnClickListener { useGps() } }, LinearLayout.LayoutParams(0, -2, 1f))
         locRow.addView(Button(this).apply { text = getString(R.string.search_city); setOnClickListener { searchCity() } }, LinearLayout.LayoutParams(0, -2, 1f))
         cityCard.addView(locRow)
+        cityCard.addView(Switch(this).apply {
+            text = getString(R.string.auto_location); textSize = 14f; setTextColor(c(R.color.text)); font?.let { typeface = it }
+            isChecked = prefs.opt("auto_location"); setPadding(0, (6 * dp).toInt(), 0, 0)
+            setOnCheckedChangeListener { _, on ->
+                prefs.setOpt("auto_location", on)
+                if (on) {
+                    if (!AutoLocation.hasPermission(this@MainActivity)) {
+                        requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), 21)
+                    } else {
+                        AutoLocation.checkIfNeeded(this@MainActivity, force = true) { runOnUiThread { render() } }
+                    }
+                }
+                render()
+            }
+        })
+        if (prefs.opt("auto_location")) {
+            when {
+                !AutoLocation.hasPermission(this) -> cityCard.addView(text(getString(R.string.need_loc), 12f, 0xFFC0392B.toInt(), true).apply {
+                    setPadding(0, (4 * dp).toInt(), 0, 0)
+                    setOnClickListener {
+                        requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), 21)
+                    }
+                })
+                Build.VERSION.SDK_INT >= 29 && !AutoLocation.hasBackgroundPermission(this) -> cityCard.addView(text(getString(R.string.need_bg_loc), 12f, c(R.color.sub)).apply {
+                    setPadding(0, (4 * dp).toInt(), 0, 0)
+                    setOnClickListener {
+                        requestPermissions(arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION), 22)
+                    }
+                })
+            }
+        }
         cityCard.addView(Switch(this).apply {
             text = getString(R.string.official_sync); textSize = 14f; setTextColor(c(R.color.text)); font?.let { typeface = it }
             isChecked = prefs.officialSync; setPadding(0, (6 * dp).toInt(), 0, 0)
@@ -433,6 +467,13 @@ class MainActivity : Activity() {
     }
 
     override fun onRequestPermissionsResult(rc: Int, p: Array<out String>, r: IntArray) {
-        if (rc == 20 && r.any { it == PackageManager.PERMISSION_GRANTED }) useGps() else refreshAll()
+        when {
+            rc == 20 && r.any { it == PackageManager.PERMISSION_GRANTED } -> useGps()
+            rc == 21 && r.any { it == PackageManager.PERMISSION_GRANTED } -> {
+                AutoLocation.checkIfNeeded(this, force = true) { runOnUiThread { render() } }
+                refreshAll()
+            }
+            else -> refreshAll()
+        }
     }
 }

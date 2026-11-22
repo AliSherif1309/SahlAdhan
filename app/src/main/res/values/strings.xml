@@ -107,4 +107,10 @@
     <string name="test_iqama_title">Sahl Adhan · Iqama test</string>
     <string name="stop_volume">Stop adhan &amp; iqama with volume down</string>
     <string name="stop_flip">Stop adhan &amp; iqama by turning the phone face down</string>
+    <string name="auto_location">Update location automatically</string>
+    <string name="need_loc">Tap to allow location so your city updates automatically.</string>
+    <string name="need_bg_loc">Tap to allow background location so your city updates even while the app is closed.</string>
+    <string name="loc_channel">Location updates</string>
+    <string name="loc_updated_title">Location updated: %1$s</string>
+    <string name="loc_updated_body">Prayer times have been updated for your current location</string>
 </resources>

@@ -25,6 +25,7 @@ class AlarmReceiver : BroadcastReceiver() {
         Widgets.updateAll(ctx)
         Updater.dailyCheck(ctx)
         Official.syncIfNeeded(ctx)   // once a day: fetch the official Qatar Calendar times
+        AutoLocation.checkIfNeeded(ctx, background = true)
     }
 
     companion object {
@@ -65,5 +66,6 @@ class SystemReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
         Scheduler.scheduleAll(ctx)
         Widgets.updateAll(ctx)
+        AutoLocation.checkIfNeeded(ctx, force = intent.action == Intent.ACTION_TIMEZONE_CHANGED, background = true)
     }
 }
