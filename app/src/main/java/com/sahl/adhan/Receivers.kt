@@ -18,7 +18,7 @@ class AlarmReceiver : BroadcastReceiver() {
                     val key = Prefs(ctx).iqamaSound
                     if (!AdhanService.start(ctx, prayer, key)) shortAlert(ctx, prayer, key)
                 }
-                ALERT_SHORT -> shortAlert(ctx, prayer)
+                ALERT_PRE_ADHAN, ALERT_SHORT -> shortAlert(ctx, prayer)
             }
         }
         Scheduler.scheduleAll(ctx)
@@ -32,10 +32,16 @@ class AlarmReceiver : BroadcastReceiver() {
         fun title(ctx: Context, prayer: Int): String {
             val c = ctx.localized()
             return when {
+                prayer == -3 -> c.getString(R.string.test_pre_adhan_title)
                 prayer == -2 -> c.getString(R.string.test_iqama_title)
                 prayer < 0 -> c.getString(R.string.test_title)
                 prayer == 5 -> c.getString(R.string.sunrise_time)
                 prayer == 6 -> c.getString(R.string.first_adhan)
+                prayer in 20..24 -> {
+                    val p = prayer - 20
+                    c.getString(R.string.pre_adhan_time, Prefs(ctx).preAdhanMin(p),
+                        Names.of(c, p, java.time.LocalDate.now(Prefs(ctx).zone)))
+                }
                 prayer in 10..14 -> c.getString(R.string.iqama_time, Names.of(c, prayer - 10, java.time.LocalDate.now(Prefs(ctx).zone)))
                 else -> c.getString(R.string.time_for, Names.of(c, prayer, java.time.LocalDate.now(Prefs(ctx).zone)))
             }
@@ -43,7 +49,11 @@ class AlarmReceiver : BroadcastReceiver() {
 
         fun shortAlert(ctx: Context, prayer: Int, soundKey: String? = null) {
             // Your own short sound and Iqama alerts play through AdhanService so Stop / volume down / flip all work
-            val key = soundKey ?: if (prayer in 10..14) Prefs(ctx).iqamaSound else Prefs(ctx).shortSound
+            val key = soundKey ?: when {
+                prayer == -3 || prayer in 20..24 -> Prefs(ctx).preAdhanSound
+                prayer == -2 || prayer in 10..14 -> Prefs(ctx).iqamaSound
+                else -> Prefs(ctx).shortSound
+            }
             if (soundKey == null && (prayer in 10..14 || Sounds.isCustom(key)) && AdhanService.start(ctx, prayer, key)) return
             Scheduler.ensureChannels(ctx, key)
             val c = ctx.localized()

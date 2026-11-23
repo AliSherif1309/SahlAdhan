@@ -61,9 +61,19 @@ object Scheduler {
         for (i in 0..4) {
             val p = pi(ctx, 20 + i, Intent(ctx, AlarmReceiver::class.java).setAction(ACTION_ALERT)
                 .putExtra(EXTRA_PRAYER, 10 + i).putExtra(EXTRA_MODE, ALERT_IQAMA))
-            if (!prefs.opt("iqama")) { am.cancel(p); continue }
+            if (!prefs.opt("iqama") || !prefs.iqamaEnabled(i)) { am.cancel(p); continue }
             val m = prefs.iqamaMin(i).toLong()
             val t = today[i].plusMinutes(m).let { if (it.isAfter(now)) it else tomorrow[i].plusMinutes(m) }
+            setAt(ctx, t.toInstant().toEpochMilli(), p)
+        }
+
+        // Pre-adhan alerts (optional): adhan time - minutes
+        for (i in 0..4) {
+            val p = pi(ctx, 30 + i, Intent(ctx, AlarmReceiver::class.java).setAction(ACTION_ALERT)
+                .putExtra(EXTRA_PRAYER, 20 + i).putExtra(EXTRA_MODE, ALERT_PRE_ADHAN))
+            if (!prefs.opt("pre_adhan") || !prefs.preAdhanEnabled(i)) { am.cancel(p); continue }
+            val m = prefs.preAdhanMin(i).toLong()
+            val t = today[i].minusMinutes(m).let { if (it.isAfter(now)) it else tomorrow[i].minusMinutes(m) }
             setAt(ctx, t.toInstant().toEpochMilli(), p)
         }
 
@@ -77,8 +87,13 @@ object Scheduler {
     }
 
     fun scheduleTest(ctx: Context, mode: Int) {
+        val prayer = when (mode) {
+            ALERT_IQAMA -> -2
+            ALERT_PRE_ADHAN -> -3
+            else -> -1
+        }
         val intent = Intent(ctx, AlarmReceiver::class.java).setAction(ACTION_ALERT)
-            .putExtra(EXTRA_PRAYER, if (mode == ALERT_IQAMA) -2 else -1).putExtra(EXTRA_MODE, mode)
+            .putExtra(EXTRA_PRAYER, prayer).putExtra(EXTRA_MODE, mode)
         setAt(ctx, System.currentTimeMillis() + 60_000, pi(ctx, REQ_TEST + mode, intent))
     }
 

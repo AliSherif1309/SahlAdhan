@@ -89,11 +89,21 @@ class MainActivity : Activity() {
     override fun onActivityResult(req: Int, res: Int, data: Intent?) {
         super.onActivityResult(req, res, data)
         val uri = data?.data ?: return
-        if (res != RESULT_OK || req !in 10..12) return
-        val key = when (req) { 10 -> "custom_full"; 11 -> "custom_short"; else -> "custom_iqama" }
+        if (res != RESULT_OK || req !in 10..13) return
+        val key = when (req) {
+            10 -> "custom_full"
+            11 -> "custom_short"
+            12 -> "custom_iqama"
+            else -> "custom_pre_adhan"
+        }
         try {
             contentResolver.openInputStream(uri)!!.use { inp -> Sounds.customFile(this, key).outputStream().use { inp.copyTo(it) } }
-            when (req) { 10 -> prefs.fullSound = key; 11 -> prefs.shortSound = key; else -> prefs.iqamaSound = key }
+            when (req) {
+                10 -> prefs.fullSound = key
+                11 -> prefs.shortSound = key
+                12 -> prefs.iqamaSound = key
+                else -> prefs.preAdhanSound = key
+            }
             Toast.makeText(this, getString(R.string.custom_saved), Toast.LENGTH_SHORT).show()
         } catch (e: Exception) { Toast.makeText(this, "✗", Toast.LENGTH_SHORT).show() }
         refreshAll()
@@ -397,6 +407,31 @@ class MainActivity : Activity() {
             isChecked = prefs.opt(k); setPadding(0, (6 * dp).toInt(), 0, (2 * dp).toInt())
             setOnCheckedChangeListener { _, on -> prefs.setOpt(k, on) }
         })
+        // Pre-adhan reminder
+        aCard.addView(Switch(this).apply {
+            text = getString(R.string.pre_adhan); textSize = 15f; setTextColor(c(R.color.text)); font?.let { typeface = it }
+            isChecked = prefs.opt("pre_adhan"); setPadding(0, (8 * dp).toInt(), 0, (4 * dp).toInt())
+            setOnCheckedChangeListener { _, on -> prefs.setOpt("pre_adhan", on); refreshAll() }
+        })
+        if (prefs.opt("pre_adhan")) {
+            val mins = (5..60).toList()
+            for (i in 0..4) {
+                val enabled = prefs.preAdhanEnabled(i)
+                val row = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
+                row.addView(CheckBox(this).apply {
+                    text = Names.of(this@MainActivity, i) + " · " + getString(R.string.pre_adhan_before)
+                    textSize = 14f; setTextColor(if (enabled) c(R.color.sub) else 0x805E6B66.toInt())
+                    font?.let { typeface = it }
+                    isChecked = enabled
+                    setOnCheckedChangeListener { _, on -> prefs.setPreAdhanEnabled(i, on); refreshAll() }
+                }, LinearLayout.LayoutParams(0, -2, 1f))
+                row.addView(spinner(mins.map { "$it" }, mins.indexOf(prefs.preAdhanMin(i)).coerceAtLeast(0)) {
+                    prefs.setPreAdhanMin(i, mins[it]); refreshAll()
+                }.apply { isEnabled = enabled; alpha = if (enabled) 1f else 0.4f })
+                aCard.addView(row)
+            }
+            soundPicker(aCard, R.string.sound_pre_adhan, Sounds.short, prefs.preAdhanSound, "custom_pre_adhan", 13) { prefs.preAdhanSound = it }
+        }
         // Iqama
         aCard.addView(Switch(this).apply {
             text = getString(R.string.iqama); textSize = 15f; setTextColor(c(R.color.text)); font?.let { typeface = it }
@@ -406,9 +441,18 @@ class MainActivity : Activity() {
         if (prefs.opt("iqama")) {
             val mins = (5..45).toList()
             for (i in 0..4) {
+                val enabled = prefs.iqamaEnabled(i)
                 val row = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
-                row.addView(text("   " + Names.of(this, i) + " · " + getString(R.string.iqama_after), 14f, c(R.color.sub)), LinearLayout.LayoutParams(0, -2, 1f))
-                row.addView(spinner(mins.map { "$it" }, mins.indexOf(prefs.iqamaMin(i)).coerceAtLeast(0)) { prefs.setIqamaMin(i, mins[it]); refreshAll() })
+                row.addView(CheckBox(this).apply {
+                    text = Names.of(this@MainActivity, i) + " · " + getString(R.string.iqama_after)
+                    textSize = 14f; setTextColor(if (enabled) c(R.color.sub) else 0x805E6B66.toInt())
+                    font?.let { typeface = it }
+                    isChecked = enabled
+                    setOnCheckedChangeListener { _, on -> prefs.setIqamaEnabled(i, on); refreshAll() }
+                }, LinearLayout.LayoutParams(0, -2, 1f))
+                row.addView(spinner(mins.map { "$it" }, mins.indexOf(prefs.iqamaMin(i)).coerceAtLeast(0)) {
+                    prefs.setIqamaMin(i, mins[it]); refreshAll()
+                }.apply { isEnabled = enabled; alpha = if (enabled) 1f else 0.4f })
                 aCard.addView(row)
             }
             soundPicker(aCard, R.string.sound_iqama, Sounds.short, prefs.iqamaSound, "custom_iqama", 12) { prefs.iqamaSound = it }
@@ -417,6 +461,9 @@ class MainActivity : Activity() {
         soundPicker(aCard, R.string.sound_short, Sounds.short, prefs.shortSound, "custom_short", 11) { prefs.shortSound = it }
         aCard.addView(Button(this).apply { text = getString(R.string.test_full); setOnClickListener { test(ALERT_FULL) } })
         aCard.addView(Button(this).apply { text = getString(R.string.test_short); setOnClickListener { test(ALERT_SHORT) } })
+        if (prefs.opt("pre_adhan")) {
+            aCard.addView(Button(this).apply { text = getString(R.string.test_pre_adhan); setOnClickListener { test(ALERT_PRE_ADHAN) } })
+        }
         if (prefs.opt("iqama")) {
             aCard.addView(Button(this).apply { text = getString(R.string.test_iqama); setOnClickListener { test(ALERT_IQAMA) } })
         }

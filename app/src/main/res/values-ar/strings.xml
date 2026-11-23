@@ -113,4 +113,10 @@
     <string name="loc_channel">تحديثات الموقع</string>
     <string name="loc_updated_title">تم تحديث الموقع: %1$s</string>
     <string name="loc_updated_body">تم تحديث مواقيت الصلاة حسب موقعك الحالي</string>
+    <string name="pre_adhan">تنبيه قبل الأذان</string>
+    <string name="pre_adhan_before">دقيقة قبل الأذان</string>
+    <string name="sound_pre_adhan">صوت التنبيه قبل الأذان</string>
+    <string name="pre_adhan_time">باقي %1$d دقيقة على %2$s</string>
+    <string name="test_pre_adhan">تجربة التنبيه قبل الأذان (بعد دقيقة)</string>
+    <string name="test_pre_adhan_title">تجربة قبل الأذان · سهل للأذان</string>
 </resources>

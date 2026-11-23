@@ -113,4 +113,10 @@
     <string name="loc_channel">Location updates</string>
     <string name="loc_updated_title">Location updated: %1$s</string>
     <string name="loc_updated_body">Prayer times have been updated for your current location</string>
+    <string name="pre_adhan">Pre-adhan reminder</string>
+    <string name="pre_adhan_before">min before adhan</string>
+    <string name="sound_pre_adhan">Pre-adhan sound</string>
+    <string name="pre_adhan_time">%1$d min until %2$s</string>
+    <string name="test_pre_adhan">Test pre-adhan (1 min)</string>
+    <string name="test_pre_adhan_title">Sahl Adhan · Pre-adhan test</string>
 </resources>

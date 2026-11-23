@@ -14,6 +14,7 @@ const val ALERT_FULL = 0
 const val ALERT_SHORT = 1
 const val ALERT_OFF = 2
 const val ALERT_IQAMA = 3
+const val ALERT_PRE_ADHAN = 4
 
 class Prefs(ctx: Context) {
     private val p = ctx.getSharedPreferences("sahl", Context.MODE_PRIVATE)
@@ -22,9 +23,17 @@ class Prefs(ctx: Context) {
     /** 24-hour clock */
     var h24: Boolean get() = p.getBoolean("h24", false); set(v) { p.edit().putBoolean("h24", v).apply(); Widgets.h24 = v }
 
-    /** Iqama: minutes after the adhan, per prayer (0 Fajr … 4 Isha). Qatar's usual waits by default. */
+    /** Iqama: enabled per prayer and minutes after the adhan (0 Fajr … 4 Isha). Qatar's usual waits by default. */
+    fun iqamaEnabled(i: Int) = p.getBoolean("iq_on$i", true)
+    fun setIqamaEnabled(i: Int, v: Boolean) = p.edit().putBoolean("iq_on$i", v).apply()
     fun iqamaMin(i: Int) = p.getInt("iq$i", intArrayOf(25, 20, 20, 10, 20)[i])
     fun setIqamaMin(i: Int, v: Int) = p.edit().putInt("iq$i", v).apply()
+
+    /** Pre-adhan reminder: enabled per prayer and minutes before the adhan (0 Fajr … 4 Isha). */
+    fun preAdhanEnabled(i: Int) = p.getBoolean("pre_on$i", true)
+    fun setPreAdhanEnabled(i: Int, v: Boolean) = p.edit().putBoolean("pre_on$i", v).apply()
+    fun preAdhanMin(i: Int) = p.getInt("pre$i", 15)
+    fun setPreAdhanMin(i: Int, v: Int) = p.edit().putInt("pre$i", v).apply()
 
     /** What the widgets/banner show now: the next time, or "since" the last prayer for 30 minutes */
     data class Show(val row: Int, val time: ZonedDateTime, val since: Boolean)
@@ -54,6 +63,7 @@ class Prefs(ctx: Context) {
     fun setOpt(key: String, v: Boolean) = p.edit().putBoolean("opt_$key", v).apply()
 
     var iqamaSound: String get() = p.getString("iqamaSound", "chime_soft") ?: "chime_soft"; set(v) = p.edit().putString("iqamaSound", v).apply()
+    var preAdhanSound: String get() = p.getString("preAdhanSound", "chime_soft") ?: "chime_soft"; set(v) = p.edit().putString("preAdhanSound", v).apply()
 
     fun adj(i: Int) = p.getInt("adj$i", 0)
     fun setAdj(i: Int, v: Int) = p.edit().putInt("adj$i", v).apply()
@@ -198,6 +208,6 @@ object Options {
     val banner = listOf(
         "b_times" to R.string.o_b_times, "b_hijri" to R.string.o_hijri, "b_after" to R.string.o_b_after,
     )
-    val defaults = mapOf("auto_location" to true, "stop_volume" to true, "stop_flip" to true, "since" to true, "iqama" to false, "hijri" to true, "date" to false, "city" to false, "countdown" to true,
+    val defaults = mapOf("auto_location" to true, "stop_volume" to true, "stop_flip" to true, "since" to true, "pre_adhan" to false, "iqama" to false, "hijri" to true, "date" to false, "city" to false, "countdown" to true,
         "sunrise" to true, "qibla" to true, "b_times" to true, "b_hijri" to true, "b_after" to true)
 }
