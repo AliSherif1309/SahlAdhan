@@ -190,7 +190,8 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume(); Scheduler.scheduleAll(this); Widgets.updateAll(this); render()
         Official.syncIfNeeded(this) { ok -> if (ok) runOnUiThread { Widgets.updateAll(this); render() } }
-        AutoLocation.checkIfNeeded(this) { runOnUiThread { Widgets.updateAll(this); render() } }
+        AutoLocation.syncPassiveRegistration(this)
+        AutoLocation.checkIfNeeded(this, onUpdated = { runOnUiThread { Widgets.updateAll(this); render() } })
         if (!checked) { checked = true; checkUpdates(false) }
     }
 
@@ -337,11 +338,12 @@ class MainActivity : Activity() {
             isChecked = prefs.opt("auto_location"); setPadding(0, (6 * dp).toInt(), 0, 0)
             setOnCheckedChangeListener { _, on ->
                 prefs.setOpt("auto_location", on)
+                AutoLocation.syncPassiveRegistration(this@MainActivity)
                 if (on) {
                     if (!AutoLocation.hasPermission(this@MainActivity)) {
                         requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), 21)
                     } else {
-                        AutoLocation.checkIfNeeded(this@MainActivity, force = true) { runOnUiThread { render() } }
+                        AutoLocation.checkIfNeeded(this@MainActivity, force = true, onUpdated = { runOnUiThread { render() } })
                     }
                 }
                 render()
@@ -532,10 +534,11 @@ class MainActivity : Activity() {
     }
 
     override fun onRequestPermissionsResult(rc: Int, p: Array<out String>, r: IntArray) {
+        AutoLocation.syncPassiveRegistration(this)
         when {
             rc == 20 && r.any { it == PackageManager.PERMISSION_GRANTED } -> useGps()
             rc == 21 && r.any { it == PackageManager.PERMISSION_GRANTED } -> {
-                AutoLocation.checkIfNeeded(this, force = true) { runOnUiThread { render() } }
+                AutoLocation.checkIfNeeded(this, force = true, onUpdated = { runOnUiThread { render() } })
                 refreshAll()
             }
             else -> refreshAll()

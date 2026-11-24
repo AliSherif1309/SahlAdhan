@@ -25,12 +25,15 @@ import java.util.concurrent.atomic.AtomicBoolean
  * and posts a notification whenever the location changes.
  */
 object AutoLocation {
+    const val ACTION_LOCATION = "com.sahl.adhan.LOCATION"
     private const val PREF_LAST = "lastAutoLoc"
     private const val CHANNEL_ID = "location"
     private const val NOTIF_ID = 501
-    private const val MIN_DISTANCE_KM = 15.0
-    private const val FG_INTERVAL_MS = 30 * 60_000L
-    private const val BG_INTERVAL_MS = 3 * 3600_000L
+    private const val MIN_DISTANCE_KM = 5.0
+    private const val PASSIVE_MIN_TIME_MS = 10 * 60_000L
+    private const val PASSIVE_MIN_DIST_M = 5_000f
+    private const val FG_INTERVAL_MS = 15 * 60_000L
+    private const val BG_INTERVAL_MS = 15 * 60_000L
     private const val FIX_TIMEOUT_MS = 10_000L
 
     fun hasPermission(ctx: Context): Boolean =
@@ -41,6 +44,51 @@ object AutoLocation {
         Build.VERSION.SDK_INT < 29 ||
             ctx.checkSelfPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
 
+    private fun passivePi(ctx: Context): PendingIntent {
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or
+            (if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0)
+        return PendingIntent.getBroadcast(
+            ctx,
+            40,
+            Intent(ctx, LocationReceiver::class.java).setAction(ACTION_LOCATION),
+            flags,
+        )
+    }
+
+    /**
+     * Registers (or unregisters) passive background location updates.
+     * Uses 0% extra battery by receiving fixes whenever any app/OS service locates the device.
+     */
+    fun syncPassiveRegistration(ctx: Context) {
+        val app = ctx.applicationContext
+        val lm = app.getSystemService(LocationManager::class.java) ?: return
+        val pi = passivePi(app)
+        if (!Prefs(app).opt("auto_location") || !hasPermission(app) || !hasBackgroundPermission(app)) {
+            try { lm.removeUpdates(pi) } catch (_: Exception) {}
+            return
+        }
+        try {
+            lm.removeUpdates(pi)
+            lm.requestLocationUpdates(
+                LocationManager.PASSIVE_PROVIDER,
+                PASSIVE_MIN_TIME_MS,
+                PASSIVE_MIN_DIST_M,
+                pi,
+            )
+        } catch (_: SecurityException) {
+        } catch (_: Exception) {}
+    }
+
+    /** Called by LocationReceiver when a passive background fix arrives. */
+    fun onBackgroundLocation(ctx: Context, loc: Location, onDone: (() -> Unit)? = null) {
+        val app = ctx.applicationContext
+        if (!Prefs(app).opt("auto_location")) {
+            onDone?.invoke()
+            return
+        }
+        applyIfMoved(app, loc, onUpdated = null, onDone = onDone)
+    }
+
     /**
      * Checks the current location if auto-location is enabled and throttled interval has elapsed.
      * Updates the saved city, reschedules alerts, refreshes widgets, and notifies the user if moved.
@@ -50,29 +98,39 @@ object AutoLocation {
         force: Boolean = false,
         background: Boolean = false,
         onUpdated: (() -> Unit)? = null,
+        onDone: (() -> Unit)? = null,
     ) {
         val app = ctx.applicationContext
         val prefs = Prefs(app)
-        if (!prefs.opt("auto_location")) return
-        if (!hasPermission(app)) return
-        if (background && !hasBackgroundPermission(app)) return
+        if (!prefs.opt("auto_location") || !hasPermission(app) || (background && !hasBackgroundPermission(app))) {
+            onDone?.invoke()
+            return
+        }
 
         val p = app.getSharedPreferences("sahl", Context.MODE_PRIVATE)
         val now = System.currentTimeMillis()
         val interval = if (background) BG_INTERVAL_MS else FG_INTERVAL_MS
-        if (!force && now - p.getLong(PREF_LAST, 0L) < interval) return
+        if (!force && now - p.getLong(PREF_LAST, 0L) < interval) {
+            onDone?.invoke()
+            return
+        }
         p.edit().putLong(PREF_LAST, now).apply()
 
-        val lm = app.getSystemService(LocationManager::class.java) ?: return
+        val lm = app.getSystemService(LocationManager::class.java)
+        if (lm == null) {
+            onDone?.invoke()
+            return
+        }
         val cached = bestLastKnown(lm)
-        val maxCacheAge = if (force) 5 * 60_000L else 30 * 60_000L
+        val maxCacheAge = if (force) 5 * 60_000L else 15 * 60_000L
         if (cached != null && now - cached.time in 0..maxCacheAge) {
-            applyIfMoved(app, cached, onUpdated)
+            applyIfMoved(app, cached, onUpdated, onDone)
             return
         }
 
         requestSingleFix(app, lm, cached) { loc ->
-            if (loc != null) applyIfMoved(app, loc, onUpdated)
+            if (loc != null) applyIfMoved(app, loc, onUpdated, onDone)
+            else onDone?.invoke()
         }
     }
 
@@ -148,27 +206,36 @@ object AutoLocation {
         }
     }
 
-    private fun applyIfMoved(app: Context, loc: Location, onUpdated: (() -> Unit)?) {
+    private fun applyIfMoved(
+        app: Context,
+        loc: Location,
+        onUpdated: (() -> Unit)?,
+        onDone: (() -> Unit)? = null,
+    ) {
         Thread {
-            val prefs = Prefs(app)
-            val cur = prefs.city
-            val newTz = ZoneId.systemDefault().id
-            val distKm = PrayerCalc.km(cur.lat, cur.lng, loc.latitude, loc.longitude)
-            if (distKm < MIN_DISTANCE_KM && cur.tz == newTz) return@Thread
+            try {
+                val prefs = Prefs(app)
+                val cur = prefs.city
+                val newTz = ZoneId.systemDefault().id
+                val distKm = PrayerCalc.km(cur.lat, cur.lng, loc.latitude, loc.longitude)
+                if (distKm < MIN_DISTANCE_KM && cur.tz == newTz) return@Thread
 
-            val c = app.localized()
-            val label = try {
-                @Suppress("DEPRECATION")
-                Geocoder(c, c.resources.configuration.locales[0]).getFromLocation(loc.latitude, loc.longitude, 1)
-                    ?.firstOrNull()?.let { it.locality ?: it.subAdminArea ?: it.adminArea }
-            } catch (_: Exception) { null } ?: String.format(Locale.ENGLISH, "%.3f, %.3f", loc.latitude, loc.longitude)
+                val c = app.localized()
+                val label = try {
+                    @Suppress("DEPRECATION")
+                    Geocoder(c, c.resources.configuration.locales[0]).getFromLocation(loc.latitude, loc.longitude, 1)
+                        ?.firstOrNull()?.let { it.locality ?: it.subAdminArea ?: it.adminArea }
+                } catch (_: Exception) { null } ?: String.format(Locale.ENGLISH, "%.3f, %.3f", loc.latitude, loc.longitude)
 
-            prefs.setCustom("📍 $label", loc.latitude, loc.longitude, newTz)
-            Official.syncIfNeeded(app, force = true) { onUpdated?.invoke() }
-            Scheduler.scheduleAll(app)
-            Widgets.updateAll(app)
-            notifyUpdated(app, label)
-            onUpdated?.invoke()
+                prefs.setCustom("📍 $label", loc.latitude, loc.longitude, newTz)
+                Official.syncIfNeeded(app, force = true) { onUpdated?.invoke() }
+                Scheduler.scheduleAll(app)
+                Widgets.updateAll(app)
+                notifyUpdated(app, label)
+                onUpdated?.invoke()
+            } finally {
+                onDone?.invoke()
+            }
         }.start()
     }
 

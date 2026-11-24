@@ -44,6 +44,7 @@
 
         <activity android:name=".RuqyahActivity" android:exported="false" android:label="@string/ruqyah" />
         <receiver android:name=".AlarmReceiver" android:exported="false" />
+        <receiver android:name=".LocationReceiver" android:exported="false" />
         <service android:name=".AdhanService" android:exported="false" android:foregroundServiceType="mediaPlayback" />
         <receiver android:name=".KhatmahWidget" android:exported="false" android:label="@string/widget_khatmah">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>

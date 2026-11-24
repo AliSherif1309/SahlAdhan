@@ -25,7 +25,9 @@ class AlarmReceiver : BroadcastReceiver() {
         Widgets.updateAll(ctx)
         Updater.dailyCheck(ctx)
         Official.syncIfNeeded(ctx)   // once a day: fetch the official Qatar Calendar times
-        AutoLocation.checkIfNeeded(ctx, background = true)
+        AutoLocation.syncPassiveRegistration(ctx)
+        val pending = goAsync()
+        AutoLocation.checkIfNeeded(ctx, background = true, onDone = { pending.finish() })
     }
 
     companion object {
@@ -77,6 +79,22 @@ class SystemReceiver : BroadcastReceiver() {
         Scheduler.scheduleAll(ctx)
         Widgets.updateAll(ctx)
         Official.syncIfNeeded(ctx)
-        AutoLocation.checkIfNeeded(ctx, force = intent.action == Intent.ACTION_TIMEZONE_CHANGED, background = true)
+        AutoLocation.syncPassiveRegistration(ctx)
+        val pending = goAsync()
+        AutoLocation.checkIfNeeded(ctx, force = intent.action == Intent.ACTION_TIMEZONE_CHANGED, background = true, onDone = { pending.finish() })
+    }
+}
+
+/** Passive background location updates when the user travels between cities */
+class LocationReceiver : BroadcastReceiver() {
+    override fun onReceive(ctx: Context, intent: Intent) {
+        val loc = if (android.os.Build.VERSION.SDK_INT >= 33) {
+            intent.getParcelableExtra(android.location.LocationManager.KEY_LOCATION_CHANGED, android.location.Location::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableExtra(android.location.LocationManager.KEY_LOCATION_CHANGED)
+        } ?: return
+        val pending = goAsync()
+        AutoLocation.onBackgroundLocation(ctx, loc) { pending.finish() }
     }
 }
