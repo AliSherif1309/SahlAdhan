@@ -96,18 +96,21 @@ class AdhanService : Service(), SensorEventListener {
     private fun listenVolume() {
         if (!Prefs(this).opt("stop_volume")) return
         val am = getSystemService(AudioManager::class.java)
+        val inCall = am.mode == AudioManager.MODE_IN_CALL || am.mode == AudioManager.MODE_IN_COMMUNICATION
 
-        // If media volume is 0 and no other app is playing media, temporarily lift it to 1 (invisibly)
-        // so pressing Volume Down can actually produce a volume drop while our silent track is active.
-        if (am.getStreamVolume(AudioManager.STREAM_MUSIC) == 0 && !am.isMusicActive) {
-            try {
-                am.setStreamVolume(AudioManager.STREAM_MUSIC, 1, 0)
-                if (am.getStreamVolume(AudioManager.STREAM_MUSIC) > 0) bumpedMusic = true
-            } catch (_: Exception) {}
-        }
+        // Outside a call, Android drops screen-off volume keys unless STREAM_MUSIC is active.
+        // During a call, avoid touching STREAM_MUSIC so call audio routing stays untouched.
+        if (!inCall) {
+            if (am.getStreamVolume(AudioManager.STREAM_MUSIC) == 0 && !am.isMusicActive) {
+                try {
+                    am.setStreamVolume(AudioManager.STREAM_MUSIC, 1, 0)
+                    if (am.getStreamVolume(AudioManager.STREAM_MUSIC) > 0) bumpedMusic = true
+                } catch (_: Exception) {}
+            }
 
-        if (am.getStreamVolume(AudioManager.STREAM_MUSIC) > 0) {
-            silentTrack = startSilentMusicTrack()
+            if (am.getStreamVolume(AudioManager.STREAM_MUSIC) > 0) {
+                silentTrack = startSilentMusicTrack()
+            }
         }
 
         session = MediaSession(this, "SahlAdhan").apply {
@@ -130,12 +133,23 @@ class AdhanService : Service(), SensorEventListener {
             isActive = true
         }
 
-        val streams = intArrayOf(
-            AudioManager.STREAM_ALARM,
-            AudioManager.STREAM_MUSIC,
-            AudioManager.STREAM_RING,
-            AudioManager.STREAM_NOTIFICATION,
-        )
+        val streams = if (inCall) {
+            intArrayOf(
+                AudioManager.STREAM_VOICE_CALL,
+                6, // STREAM_BLUETOOTH_SCO
+                AudioManager.STREAM_ALARM,
+                AudioManager.STREAM_MUSIC,
+                AudioManager.STREAM_RING,
+                AudioManager.STREAM_NOTIFICATION,
+            )
+        } else {
+            intArrayOf(
+                AudioManager.STREAM_ALARM,
+                AudioManager.STREAM_MUSIC,
+                AudioManager.STREAM_RING,
+                AudioManager.STREAM_NOTIFICATION,
+            )
+        }
         val lastVol = IntArray(streams.size) { am.getStreamVolume(streams[it]) }
         var lastRinger = am.ringerMode
 
@@ -238,7 +252,7 @@ class AdhanService : Service(), SensorEventListener {
 
     override fun onSensorChanged(e: SensorEvent) {
         val z = e.values[2]
-        if (z > 0f) { faceUpSeen = true; faceDownSince = 0L; return }   // must not already be lying face down
+        if (z > -4.0f) { faceUpSeen = true; faceDownSince = 0L; return }   // upright, at ear, or face up (not already face down)
         if (faceUpSeen && z < -8.5f) {
             if (faceDownSince == 0L) faceDownSince = SystemClock.elapsedRealtime()
             else if (SystemClock.elapsedRealtime() - faceDownSince > 800) stopSelf()
