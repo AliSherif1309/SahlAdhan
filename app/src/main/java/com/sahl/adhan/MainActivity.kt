@@ -339,6 +339,7 @@ class MainActivity : Activity() {
             setOnCheckedChangeListener { _, on ->
                 prefs.setOpt("auto_location", on)
                 AutoLocation.syncPassiveRegistration(this@MainActivity)
+                Scheduler.scheduleLocationCheck(this@MainActivity)
                 if (on) {
                     if (!AutoLocation.hasPermission(this@MainActivity)) {
                         requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), 21)
@@ -351,13 +352,13 @@ class MainActivity : Activity() {
         })
         if (prefs.opt("auto_location")) {
             when {
-                !AutoLocation.hasPermission(this) -> cityCard.addView(text(getString(R.string.need_loc), 12f, 0xFFC0392B.toInt(), true).apply {
+                !AutoLocation.hasPermission(this) -> cityCard.addView(text(getString(R.string.need_loc), 13f, 0xFFC0392B.toInt(), true).apply {
                     setPadding(0, (4 * dp).toInt(), 0, 0)
                     setOnClickListener {
                         requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), 21)
                     }
                 })
-                Build.VERSION.SDK_INT >= 29 && !AutoLocation.hasBackgroundPermission(this) -> cityCard.addView(text(getString(R.string.need_bg_loc), 12f, c(R.color.sub)).apply {
+                Build.VERSION.SDK_INT >= 29 && !AutoLocation.hasBackgroundPermission(this) -> cityCard.addView(text(getString(R.string.need_bg_loc), 13f, 0xFFC0392B.toInt(), true).apply {
                     setPadding(0, (4 * dp).toInt(), 0, 0)
                     setOnClickListener {
                         requestPermissions(arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION), 22)
@@ -535,11 +536,15 @@ class MainActivity : Activity() {
 
     override fun onRequestPermissionsResult(rc: Int, p: Array<out String>, r: IntArray) {
         AutoLocation.syncPassiveRegistration(this)
+        Scheduler.scheduleLocationCheck(this)
         when {
             rc == 20 && r.any { it == PackageManager.PERMISSION_GRANTED } -> useGps()
             rc == 21 && r.any { it == PackageManager.PERMISSION_GRANTED } -> {
                 AutoLocation.checkIfNeeded(this, force = true, onUpdated = { runOnUiThread { render() } })
                 refreshAll()
+            }
+            rc == 22 && !AutoLocation.hasBackgroundPermission(this) -> {
+                startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")))
             }
             else -> refreshAll()
         }

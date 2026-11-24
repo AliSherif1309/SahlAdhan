@@ -19,7 +19,9 @@ object Scheduler {
     const val EXTRA_MODE = "mode"
     const val ACTION_ALERT = "com.sahl.adhan.ALERT"
     const val ACTION_REFRESH = "com.sahl.adhan.REFRESH"
+    const val ACTION_LOC_CHECK = "com.sahl.adhan.LOC_CHECK"
     private const val REQ_REFRESH = 100
+    private const val REQ_LOC = 101
     private const val REQ_TEST = 200
 
     fun canExact(ctx: Context): Boolean {
@@ -84,6 +86,18 @@ object Scheduler {
         val boundary = candidates.filter { it.isAfter(now) }.minOrNull()!!
         setAt(ctx, boundary.toInstant().toEpochMilli() + 1000,
             pi(ctx, REQ_REFRESH, Intent(ctx, AlarmReceiver::class.java).setAction(ACTION_REFRESH)))
+
+        scheduleLocationCheck(ctx)
+    }
+
+    fun scheduleLocationCheck(ctx: Context) {
+        val am = ctx.getSystemService(AlarmManager::class.java)
+        val p = pi(ctx, REQ_LOC, Intent(ctx, AlarmReceiver::class.java).setAction(ACTION_LOC_CHECK))
+        if (!Prefs(ctx).opt("auto_location") || !AutoLocation.hasPermission(ctx) || !AutoLocation.hasBackgroundPermission(ctx)) {
+            am.cancel(p)
+            return
+        }
+        am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 30 * 60_000L, p)
     }
 
     fun scheduleTest(ctx: Context, mode: Int) {

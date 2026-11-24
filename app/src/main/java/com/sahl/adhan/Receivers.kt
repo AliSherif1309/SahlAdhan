@@ -9,6 +9,13 @@ import android.content.Intent
 
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
+        if (intent.action == Scheduler.ACTION_LOC_CHECK) {
+            Scheduler.scheduleLocationCheck(ctx)
+            AutoLocation.syncPassiveRegistration(ctx)
+            val pending = goAsync()
+            AutoLocation.checkIfNeeded(ctx, force = true, background = true, onDone = { pending.finish() })
+            return
+        }
         if (intent.action == Scheduler.ACTION_ALERT) {
             val prayer = intent.getIntExtra(Scheduler.EXTRA_PRAYER, -1)
             val mode = intent.getIntExtra(Scheduler.EXTRA_MODE, ALERT_SHORT)
