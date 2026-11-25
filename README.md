@@ -1,73 +1,39 @@
 <div align="center">
 
-# سهل للأذان · Sahl Adhan
+<img src="docs/banner.svg" alt="Sahl Adhan · سهل للأذان" width="100%"/>
 
-**Prayer-time widgets and adhan alerts for Android, in Arabic and English.**
+<br/><br/>
 
-[![Latest release](https://img.shields.io/github/v/release/AliSherif1309/SahlAdhan?label=download&color=0B5D4B)](https://github.com/AliSherif1309/SahlAdhan/releases/latest)
-[![Build](https://github.com/AliSherif1309/SahlAdhan/actions/workflows/build.yml/badge.svg)](https://github.com/AliSherif1309/SahlAdhan/actions)
+[![Download APK](https://img.shields.io/github/v/release/AliSherif1309/SahlAdhan?label=Download%20APK&color=0B5D4B&style=for-the-badge)](https://github.com/AliSherif1309/SahlAdhan/releases/latest)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/AliSherif1309/SahlAdhan/build.yml?label=Build&color=1E8A70&style=for-the-badge)](https://github.com/AliSherif1309/SahlAdhan/actions)
+![Bilingual](https://img.shields.io/badge/Language-Arabic%20%26%20English-D4AF37?style=for-the-badge)
+![Privacy](https://img.shields.io/badge/Privacy-100%%20Offline-073D32?style=for-the-badge)
 
 </div>
 
 ---
 
-## Features
+## ✨ Highlights
 
-| | |
+| Feature | What it gives you |
 |---|---|
-| **3 home-screen widgets** | **Khatmah style** (all six times + "باق على" countdown), **Next prayer** (compact, live countdown) and **Today** (five prayers in one row, next one highlighted) |
-| **Accurate offline times** | Calculated on the phone, no internet or location tracking. Default **Qatar (Awqaf)** method, matching the ختمة timetable for Doha |
-| **Settings** | 13 cities (Qatar, Gulf, Makkah, Madinah, Cairo), 6 calculation methods, Standard or Hanafi Asr, ±15 minute adjustment per prayer |
-| **Adhan alerts** | Per prayer: **Full adhan**, **Short alert** or **Off**. Works with the screen locked and the app closed. Stop button on the notification |
-| **Choose your sound** | Full: Adhan 1 (2:34), Adhan 2 (0:42), phone alarm. Short: Takbir, soft chime, double chime, phone sound. Preview before choosing |
-| **Arabic & English** | In-app language switch, Thmanyah Sans font, right-to-left layout |
-| **Light & dark** | Emerald and gold, follows the phone's theme |
-| **Self-updating** | Checks GitHub Releases on open and once a day, installs new versions in one tap |
+| 🕌 **3 Home Screen Widgets** | Khatmah timetable (all 6 times + countdown), compact Next Prayer card, and Today's 5-prayer strip. |
+| 🧭 **Accurate Offline Times** | Calculated locally on your phone with Qatar (Awqaf) defaults, 13 cities, 6 calculation methods, and ±15 min adjustments. |
+| 🔔 **Custom Adhan Alerts** | Choose Full Adhan, Short Takbir/Chime, or Off per prayer—works reliably even when the screen is locked. |
+| 🌙 **Bilingual & Calm** | Arabic & English interface, Thmanyah Sans typography, light & dark emerald themes, and built-in Qibla & Ruqyah. |
 
-## Install
+---
 
-1. Download the latest **`SahlAdhan-v1.x.apk`** from [**Releases**](https://github.com/AliSherif1309/SahlAdhan/releases/latest).
-2. Open it and allow installing from your browser if Android asks.
-3. Open the app, allow **notifications**, and tap **Test full adhan** with the screen locked.
-4. Long-press the home screen → **Widgets** → **Sahl Adhan**.
+## 📲 Install in Seconds
 
-### Honor / Huawei phones
-To make sure alerts arrive when the phone is locked:
-**Settings › Apps › Sahl Adhan › Battery › App launch → Manage manually**, and turn on all three switches.
+1. Tap **[Download Latest APK](https://github.com/AliSherif1309/SahlAdhan/releases/latest)** above.
+2. Open the downloaded `.apk` file on your Android phone to install.
+3. **Sahl Adhan** checks for new versions automatically so you stay up to date in one tap.
 
-## Updates
+---
 
-The app updates itself from this repository's releases:
+## 🌿 The Sahl Apps Family · عائلة تطبيقات سهل
 
-- On open, a **"إصدار جديد متاح"** card appears when a newer release exists → tap **حدّث الآن**.
-- Once a day it checks in the background and sends a notification.
-- Or tap **التحقق من التحديثات** at the bottom of the main screen.
+A calm, ad-free, bilingual (**Arabic & English**) suite of everyday Android apps crafted in **Emerald & Gold**:
 
-The first time, Android asks you to allow Sahl Adhan to install apps.
-
-## How releases work
-
-Every push to `main` builds the app and publishes a new release with the APK attached, so the app always finds the newest version.
-
-## Project layout
-
-```
-app/src/main/java/com/sahl/adhan/
-├── PrayerCalc.kt     Prayer-time math, cities and calculation methods
-├── Prefs.kt          Settings, language, sound catalogue
-├── Scheduler.kt      Exact alarms for prayers and widget refresh
-├── Receivers.kt      Alarm, boot, time and time-zone events
-├── AdhanService.kt   Plays the full adhan with a Stop button
-├── Widgets.kt        The three home-screen widgets
-├── Updater.kt        GitHub Releases update check and install
-└── MainActivity.kt   Today screen and settings
-```
-
-Built with Kotlin and plain Android APIs (no extra libraries). Min Android 8.0, target Android 14.
-
-## Credits
-
-- **Adhan 1:** "Beautiful adhan.ogg" by Adam-synagda, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Beautiful_adhan.ogg), CC0 1.0
-- **Adhan 2 and Takbir clip:** "Adhan.ogg", [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Adhan.ogg), CC0 1.0
-- **Soft and double chimes:** original, made for this app
-- **Font:** Thmanyah Sans by Thmanyah
+[🎨 Sahl Theme](https://github.com/AliSherif1309/SahlHome) · [🧭 Sahl Qibla](https://github.com/AliSherif1309/SahlQibla) · [📞 Sahl Phone](https://github.com/AliSherif1309/SahlPhone) · [👤 Sahl Contacts](https://github.com/AliSherif1309/SahlContacts) · [💬 Sahl Messages](https://github.com/AliSherif1309/SahlMessages) · [📷 Sahl Camera](https://github.com/AliSherif1309/SahlCamera) · [🖼️ Sahl Gallery](https://github.com/AliSherif1309/SahlGallery) · [📁 Sahl Files](https://github.com/AliSherif1309/SahlFiles) · [📄 Sahl PDF](https://github.com/AliSherif1309/SahlPDF) · [🛠️ Sahl Tools](https://github.com/AliSherif1309/SahlTools) · [☁️ Sahl Sync](https://github.com/AliSherif1309/SahlSync) · [📺 Sahl TV](https://github.com/AliSherif1309/SahlTV-Launcher)
