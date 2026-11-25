@@ -47,7 +47,7 @@ object Banner {
         ensureChannel(nm, c)
         val s = prefs.show()
         val open = PendingIntent.getActivity(ctx, 2, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
-        nm.notify(ID, Notification.Builder(ctx, CHANNEL).setSmallIcon(R.drawable.ic_sahl_notif)
+        nm.notify(ID, SahlNotif.apply(ctx, Notification.Builder(ctx, CHANNEL))
             .setContentTitle(Names.row(c, s.row, s.time.toLocalDate()) + "  " + Widgets.fmt(s.time))
             .setWhen(s.time.toInstant().toEpochMilli()).setShowWhen(true).setUsesChronometer(true)
             .setChronometerCountDown(!s.since).setOngoing(true).setOnlyAlertOnce(true)
@@ -129,8 +129,7 @@ object Banner {
 
         val open = PendingIntent.getActivity(ctx, 2, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
         val qibla = PendingIntent.getActivity(ctx, 4, Qibla.intent(ctx), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-        val n = Notification.Builder(ctx, CHANNEL)
-            .setSmallIcon(R.drawable.ic_sahl_notif)
+        val n = SahlNotif.apply(ctx, Notification.Builder(ctx, CHANNEL))
             .setStyle(Notification.DecoratedCustomViewStyle())
             .setCustomContentView(small)
             .setCustomBigContentView(big)
