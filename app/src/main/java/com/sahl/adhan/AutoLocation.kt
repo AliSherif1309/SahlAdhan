@@ -250,8 +250,7 @@ object AutoLocation {
             val open = PendingIntent.getActivity(
                 app, 6, Intent(app, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE
             )
-            val n = Notification.Builder(app, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_sahl_notif)
+            val n = SahlNotif.apply(app, Notification.Builder(app, CHANNEL_ID))
                 .setContentTitle(c.getString(R.string.loc_updated_title, label))
                 .setContentText(c.getString(R.string.loc_updated_body))
                 .setContentIntent(open)
