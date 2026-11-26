@@ -32,6 +32,7 @@ class MainActivity : Activity() {
 
     private var preview: MediaPlayer? = null
     private var volDownConsumed = false
+    private var viewDate: java.time.LocalDate? = null
     private val font by lazy { try { resources.getFont(R.font.thmanyah) } catch (e: Exception) { null } }
 
     override fun attachBaseContext(newBase: Context) { super.attachBaseContext(newBase.localized()) }
@@ -253,7 +254,11 @@ class MainActivity : Activity() {
         body.removeAllViews()
         val ar = Names.isArabic(this)
         val now = ZonedDateTime.now(prefs.zone)
+        val today = now.toLocalDate()
+        val d = viewDate ?: today
+        val isToday = d == today
         val (nextI, nextT) = prefs.next(now)
+        val afterIsha = nextT.toLocalDate().isAfter(today)
         val loc = resources.configuration.locales[0]
 
         // Header
@@ -267,7 +272,8 @@ class MainActivity : Activity() {
         header.addView(text(getString(R.string.app_name), 15f, c(R.color.gold), true))
         header.addView(text(now.format(DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", loc)), 14f, 0xFFFFFFFF.toInt()))
         header.addView(text(HijrahDate.from(now).format(DateTimeFormatter.ofPattern("d MMMM yyyy", loc)), 13f, 0xFFCFE3DC.toInt()))
-        header.addView(text("${getString(R.string.next)}: ${Names.of(this, nextI, nextT.toLocalDate())}  ${Widgets.fmt(nextT)}", 22f, 0xFFFFFFFF.toInt(), true).apply { setPadding(0, (8 * dp).toInt(), 0, 0) })
+        val nextLabel = if (afterIsha) "${getString(R.string.next)} (${getString(R.string.tomorrow)})" else getString(R.string.next)
+        header.addView(text("$nextLabel: ${Names.of(this, nextI, nextT.toLocalDate())}  ${Widgets.fmt(nextT)}", 22f, 0xFFFFFFFF.toInt(), true).apply { setPadding(0, (8 * dp).toInt(), 0, 0) })
 
         val links = LinearLayout(this).apply { layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = (10 * dp).toInt() } }
         links.addView(Button(this).apply { text = getString(R.string.qibla); setOnClickListener { startActivity(Qibla.intent(this@MainActivity)) } },
@@ -289,24 +295,63 @@ class MainActivity : Activity() {
             })
         }
 
-        // Today's times
-        val times = prefs.times(now.toLocalDate())
+        // Day timetable with prev/next arrows & calendar picker
+        val times = prefs.times(d)
         val labels = listOf(R.string.fajr, R.string.sunrise, R.string.dhuhr, R.string.asr, R.string.maghrib, R.string.isha)
         val tCard = card()
+        val nav = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL; setPadding(0, 0, 0, (4 * dp).toInt()) }
+        val dayPrefix = when (d) {
+            today -> getString(R.string.today) + " · "
+            today.plusDays(1) -> getString(R.string.tomorrow) + " · "
+            today.minusDays(1) -> getString(R.string.yesterday) + " · "
+            else -> ""
+        }
+        val dateText = d.format(DateTimeFormatter.ofPattern("EEE d MMM yyyy", loc))
+        nav.addView(Button(this).apply {
+            text = if (ar) "→" else "←"
+            setOnClickListener { viewDate = d.minusDays(1); render() }
+        }, LinearLayout.LayoutParams((48 * dp).toInt(), -2))
+        nav.addView(Button(this).apply {
+            text = "📅 $dayPrefix$dateText"
+            setOnClickListener {
+                android.app.DatePickerDialog(this@MainActivity, { _, y, m, dom ->
+                    viewDate = java.time.LocalDate.of(y, m + 1, dom); render()
+                }, d.year, d.monthValue - 1, d.dayOfMonth).show()
+            }
+        }, LinearLayout.LayoutParams(0, -2, 1f))
+        nav.addView(Button(this).apply {
+            text = if (ar) "←" else "→"
+            setOnClickListener { viewDate = d.plusDays(1); render() }
+        }, LinearLayout.LayoutParams((48 * dp).toInt(), -2))
+        tCard.addView(nav)
+        if (!isToday) {
+            val subNav = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL; setPadding(0, 0, 0, (6 * dp).toInt()) }
+            subNav.addView(text(HijrahDate.from(d).format(DateTimeFormatter.ofPattern("d MMMM yyyy", loc)), 12f, c(R.color.sub)),
+                LinearLayout.LayoutParams(0, -2, 1f))
+            subNav.addView(text(getString(R.string.today), 13f, c(R.color.emerald), true).apply {
+                setOnClickListener { viewDate = null; render() }
+            })
+            tCard.addView(subNav)
+        } else if (afterIsha) {
+            tCard.addView(text(getString(R.string.after_isha_today), 12f, c(R.color.gold), true).apply {
+                setPadding(0, 0, 0, (6 * dp).toInt())
+                setOnClickListener { viewDate = today.plusDays(1); render() }
+            })
+        }
         times.forEachIndexed { k, t ->
             val fardIndex = when (k) { 0 -> 0; 2 -> 1; 3 -> 2; 4 -> 3; 5 -> 4; else -> -1 }
-            val isNext = fardIndex == nextI && nextT.toLocalDate() == now.toLocalDate()
+            val isNext = isToday && fardIndex == nextI && nextT.toLocalDate() == today
             val row = LinearLayout(this).apply { setPadding(0, (8 * dp).toInt(), 0, (8 * dp).toInt()) }
             val color = if (isNext) c(R.color.emerald) else c(R.color.text)
-            val name = if (k == 2) Names.of(this, 1, now.toLocalDate()) else getString(labels[k])
+            val name = if (k == 2) Names.of(this, 1, d) else getString(labels[k])
             row.addView(text(name, 17f, color, isNext), LinearLayout.LayoutParams(0, -2, 1f))
             row.addView(text(Widgets.fmt(t), 17f, color, true))
             tCard.addView(row)
         }
         // First Friday adhan: shown on Thursday and Friday
-        val dow = now.dayOfWeek
+        val dow = d.dayOfWeek
         if (dow == java.time.DayOfWeek.THURSDAY || dow == java.time.DayOfWeek.FRIDAY) {
-            val fa = prefs.firstAdhan(now)
+            val fa = prefs.firstAdhan(d.atStartOfDay(prefs.zone))
             val row = LinearLayout(this).apply { setPadding(0, (8 * dp).toInt(), 0, (8 * dp).toInt()) }
             row.addView(text(getString(R.string.first_adhan), 17f, c(R.color.gold), true), LinearLayout.LayoutParams(0, -2, 1f))
             row.addView(text(Widgets.fmt(fa), 17f, c(R.color.gold), true))
@@ -371,8 +416,27 @@ class MainActivity : Activity() {
             isChecked = prefs.officialSync; setPadding(0, (6 * dp).toInt(), 0, 0)
             setOnCheckedChangeListener { _, on -> prefs.officialSync = on; Official.syncIfNeeded(this@MainActivity, force = true) { runOnUiThread { refreshAll() } }; refreshAll() }
         })
-        cityCard.addView(text(getString(if (prefs.isOfficial(now.toLocalDate())) R.string.src_official
+        cityCard.addView(text(getString(if (prefs.isOfficial(d)) R.string.src_official
             else if (prefs.officialSync && prefs.city.qch > 0) R.string.src_pending else R.string.src_calc), 12f, c(R.color.sub)))
+        if (prefs.officialSync) {
+            cityCard.addView(Button(this).apply {
+                text = getString(R.string.fetch_official_now)
+                setOnClickListener {
+                    isEnabled = false
+                    Official.syncIfNeeded(this@MainActivity, force = true) { ok ->
+                        runOnUiThread {
+                            isEnabled = true
+                            Toast.makeText(
+                                this@MainActivity,
+                                getString(if (ok) R.string.official_fetched else R.string.official_fetch_fail),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            refreshAll()
+                        }
+                    }
+                }
+            })
+        }
 
         // Alerts
         val aCard = card()

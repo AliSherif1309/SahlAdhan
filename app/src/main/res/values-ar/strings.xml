@@ -119,4 +119,12 @@
     <string name="pre_adhan_time">باقي %1$d دقيقة على %2$s</string>
     <string name="test_pre_adhan">تجربة التنبيه قبل الأذان (بعد دقيقة)</string>
     <string name="test_pre_adhan_title">تجربة قبل الأذان · سهل للأذان</string>
+    <string name="fetch_official_now">🔄 تحديث المواقيت الرسمية الآن</string>
+    <string name="official_fetched">✓ تم تحديث المواقيت الرسمية</string>
+    <string name="official_fetch_fail">تعذّر جلب المواقيت الرسمية. تحقق من الاتصال بالإنترنت.</string>
+    <string name="today">اليوم</string>
+    <string name="tomorrow">غداً</string>
+    <string name="yesterday">أمس</string>
+    <string name="after_isha_today">بعد العشاء — مواقيت اليوم · اضغط لعرض الغد</string>
+    <string name="today_times">مواقيت اليوم</string>
 </resources>

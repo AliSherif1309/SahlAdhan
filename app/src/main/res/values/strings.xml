@@ -119,4 +119,12 @@
     <string name="pre_adhan_time">%1$d min until %2$s</string>
     <string name="test_pre_adhan">Test pre-adhan (1 min)</string>
     <string name="test_pre_adhan_title">Sahl Adhan · Pre-adhan test</string>
+    <string name="fetch_official_now">🔄 Refresh official times now</string>
+    <string name="official_fetched">✓ Official times updated</string>
+    <string name="official_fetch_fail">Could not fetch official times. Check internet connection.</string>
+    <string name="today">Today</string>
+    <string name="tomorrow">Tomorrow</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="after_isha_today">After Isha — showing today\'s times · Tap for tomorrow</string>
+    <string name="today_times">Today\'s times</string>
 </resources>

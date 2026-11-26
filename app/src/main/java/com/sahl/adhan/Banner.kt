@@ -67,7 +67,8 @@ object Banner {
         val s = prefs.show(now)
         val shownDate = s.time.toLocalDate()
         val ar = Names.isArabic(c)
-        val name = Names.row(c, s.row, shownDate)
+        val baseName = Names.row(c, s.row, shownDate)
+        val name = if (!s.since && shownDate.isAfter(today)) "$baseName (${c.getString(R.string.tomorrow)})" else baseName
 
         // Expanded strip always shows today's times, matching inside the app
         val todayTimes = prefs.times(today)

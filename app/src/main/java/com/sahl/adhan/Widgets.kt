@@ -62,8 +62,13 @@ object Widgets {
         val now = ZonedDateTime.now(pr.zone)
         val s = pr.show(now); val r = s.row; val t = s.time
         val today = now.toLocalDate()
+        val afterIsha = !s.since && t.toLocalDate().isAfter(today)
         val v = RemoteViews(ctx.packageName, R.layout.widget_compact)
-        v.setTextViewText(R.id.label, if (s.since) label(c, s) else c.getString(R.string.next))
+        v.setTextViewText(R.id.label, when {
+            s.since -> label(c, s)
+            afterIsha -> c.getString(R.string.next) + " · " + c.getString(R.string.tomorrow)
+            else -> c.getString(R.string.next)
+        })
         v.setTextViewText(R.id.hijri, hijri(c, today)); v.setViewVisibility(R.id.hijri, vis(pr.opt("hijri")))
         val ex = extraLine(c, pr, today)
         v.setTextViewText(R.id.extra, ex); v.setViewVisibility(R.id.extra, vis(ex.isNotEmpty()))
@@ -106,6 +111,7 @@ object Widgets {
         val now = ZonedDateTime.now(prefs.zone)
         val today = now.toLocalDate()
         val s = prefs.show(now); val nextRow = s.row; val nextT = s.time
+        val afterIsha = !s.since && nextT.toLocalDate().isAfter(today)
         val all = prefs.times(today)
         val ar = Names.isArabic(c)
         val labels = intArrayOf(R.string.fajr, R.string.sunrise, R.string.dhuhr, R.string.asr, R.string.maghrib, R.string.isha)
@@ -117,14 +123,15 @@ object Widgets {
             // Arabic: time on the left, name on the right (like Khatmah). English: the reverse.
             v.setTextViewText(ls[row], if (ar) time else name)
             v.setTextViewText(rs[row], if (ar) name else time)
-            val col = if (row == nextRow && nextT.toLocalDate() == today) GOLD else WHITE
+            val col = if (row == nextRow && !afterIsha) GOLD else WHITE
             v.setTextColor(ls[row], col); v.setTextColor(rs[row], col)
         }
-        v.setTextViewText(R.id.remain, label(c, s))
+        v.setTextViewText(R.id.remain, if (afterIsha) label(c, s) + " (" + c.getString(R.string.tomorrow) + ")" else label(c, s))
         countdown(v, R.id.countdown, nextT, s.since)
         v.setTextViewText(R.id.hijri, hijri(c, today))
         v.setViewVisibility(R.id.hijri, vis(prefs.opt("hijri")))
-        val ex = extraLine(c, prefs, today)
+        val baseEx = extraLine(c, prefs, today)
+        val ex = if (afterIsha) listOfNotNull(c.getString(R.string.today_times), baseEx.takeIf { it.isNotEmpty() }).joinToString(" · ") else baseEx
         v.setTextViewText(R.id.extra, ex); v.setViewVisibility(R.id.extra, vis(ex.isNotEmpty()))
         v.setViewVisibility(R.id.countdown, vis(prefs.opt("countdown")))
         v.setViewVisibility(R.id.row1, vis(prefs.opt("sunrise")))
