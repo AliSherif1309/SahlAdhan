@@ -127,4 +127,5 @@
     <string name="yesterday">Yesterday</string>
     <string name="after_isha_today">After Isha — showing today\'s times · Tap for tomorrow</string>
     <string name="today_times">Today\'s times</string>
+    <string name="sound_in_silent">Play adhan when phone is silent/vibrate</string>
 </resources>

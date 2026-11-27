@@ -208,6 +208,6 @@ object Options {
     val banner = listOf(
         "b_times" to R.string.o_b_times, "b_hijri" to R.string.o_hijri, "b_after" to R.string.o_b_after,
     )
-    val defaults = mapOf("auto_location" to true, "stop_volume" to true, "stop_flip" to true, "since" to true, "pre_adhan" to false, "iqama" to false, "hijri" to true, "date" to false, "city" to false, "countdown" to true,
+    val defaults = mapOf("auto_location" to true, "sound_in_silent" to false, "stop_volume" to true, "stop_flip" to true, "since" to true, "pre_adhan" to false, "iqama" to false, "hijri" to true, "date" to false, "city" to false, "countdown" to true,
         "sunrise" to true, "qibla" to true, "b_times" to true, "b_hijri" to true, "b_after" to true)
 }

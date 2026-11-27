@@ -468,8 +468,8 @@ class MainActivity : Activity() {
             setPadding(0, (8 * dp).toInt(), 0, (4 * dp).toInt())
             setOnCheckedChangeListener { _, on -> prefs.showBanner = on; Banner.update(this@MainActivity) }
         })
-        // Ways to stop the adhan
-        for ((k, l) in listOf("stop_volume" to R.string.stop_volume, "stop_flip" to R.string.stop_flip)) aCard.addView(Switch(this).apply {
+        // Sound in silent mode & ways to stop the adhan
+        for ((k, l) in listOf("sound_in_silent" to R.string.sound_in_silent, "stop_volume" to R.string.stop_volume, "stop_flip" to R.string.stop_flip)) aCard.addView(Switch(this).apply {
             text = getString(l); textSize = 15f; setTextColor(c(R.color.text)); font?.let { typeface = it }
             isChecked = prefs.opt(k); setPadding(0, (6 * dp).toInt(), 0, (2 * dp).toInt())
             setOnCheckedChangeListener { _, on -> prefs.setOpt(k, on) }

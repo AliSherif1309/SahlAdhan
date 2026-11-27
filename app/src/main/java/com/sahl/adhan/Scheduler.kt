@@ -121,6 +121,10 @@ object Scheduler {
             setSound(null, null); enableVibration(true); setBypassDnd(true)
         }
         nm.createNotificationChannel(playing)
+        val silent = NotificationChannel("adhan_silent", c.getString(R.string.alerts), NotificationManager.IMPORTANCE_HIGH).apply {
+            setSound(null, null); enableVibration(true)
+        }
+        nm.createNotificationChannel(silent)
         val key = shortKey ?: Prefs(ctx).shortSound
         val label = Sounds.short.firstOrNull { it.key == key }?.label ?: R.string.alert_short
         val short = NotificationChannel("short_$key", c.getString(R.string.alert_short) + " · " + c.getString(label),
