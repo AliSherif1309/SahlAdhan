@@ -20,10 +20,16 @@ class AlarmReceiver : BroadcastReceiver() {
             val prayer = intent.getIntExtra(Scheduler.EXTRA_PRAYER, -1)
             val mode = intent.getIntExtra(Scheduler.EXTRA_MODE, ALERT_SHORT)
             when (mode) {
-                ALERT_FULL -> if (!AdhanService.start(ctx, prayer)) shortAlert(ctx, prayer)
+                ALERT_FULL -> when {
+                    isMutedByRinger(ctx) -> silentNotify(ctx, prayer)
+                    !AdhanService.start(ctx, prayer) -> shortAlert(ctx, prayer)
+                }
                 ALERT_IQAMA -> {
                     val key = Prefs(ctx).iqamaSound
-                    if (!AdhanService.start(ctx, prayer, key)) shortAlert(ctx, prayer, key)
+                    when {
+                        isMutedByRinger(ctx) -> silentNotify(ctx, prayer)
+                        !AdhanService.start(ctx, prayer, key) -> shortAlert(ctx, prayer, key)
+                    }
                 }
                 ALERT_PRE_ADHAN, ALERT_SHORT -> shortAlert(ctx, prayer)
             }
@@ -38,6 +44,26 @@ class AlarmReceiver : BroadcastReceiver() {
     }
 
     companion object {
+        fun isMutedByRinger(ctx: Context): Boolean {
+            if (Prefs(ctx).opt("sound_in_silent")) return false
+            val am = ctx.getSystemService(android.media.AudioManager::class.java)
+            return am.ringerMode != android.media.AudioManager.RINGER_MODE_NORMAL
+        }
+
+        fun silentNotify(ctx: Context, prayer: Int) {
+            Scheduler.ensureChannels(ctx)
+            val c = ctx.localized()
+            val open = PendingIntent.getActivity(ctx, 0, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
+            val n = SahlNotif.apply(ctx, Notification.Builder(ctx, "adhan_silent"))
+                .setContentTitle(title(ctx, prayer))
+                .setContentText(Prefs(ctx).city.let { if (Names.isArabic(c)) it.ar else it.en })
+                .setCategory(Notification.CATEGORY_REMINDER)
+                .setContentIntent(open)
+                .setAutoCancel(true)
+                .build()
+            ctx.getSystemService(NotificationManager::class.java).notify(1000 + prayer + 1, n)
+        }
+
         fun title(ctx: Context, prayer: Int): String {
             val c = ctx.localized()
             return when {
@@ -57,6 +83,7 @@ class AlarmReceiver : BroadcastReceiver() {
         }
 
         fun shortAlert(ctx: Context, prayer: Int, soundKey: String? = null) {
+            if (isMutedByRinger(ctx)) { silentNotify(ctx, prayer); return }
             // Your own short sound and Iqama alerts play through AdhanService so Stop / volume down / flip all work
             val key = soundKey ?: when {
                 prayer == -3 || prayer in 20..24 -> Prefs(ctx).preAdhanSound

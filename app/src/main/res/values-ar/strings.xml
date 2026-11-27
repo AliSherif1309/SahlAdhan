@@ -127,4 +127,5 @@
     <string name="yesterday">أمس</string>
     <string name="after_isha_today">بعد العشاء — مواقيت اليوم · اضغط لعرض الغد</string>
     <string name="today_times">مواقيت اليوم</string>
+    <string name="sound_in_silent">تشغيل الأذان عند الصامت أو الاهتزاز</string>
 </resources>

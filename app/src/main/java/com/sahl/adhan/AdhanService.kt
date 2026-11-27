@@ -331,6 +331,12 @@ class AdhanService : Service(), SensorEventListener {
         if (Build.VERSION.SDK_INT >= 29) startForeground(77, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
         else startForeground(77, n)
 
+        if (AlarmReceiver.isMutedByRinger(this)) {
+            AlarmReceiver.silentNotify(this, prayer)
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
         stopListeners()
         restoreBumpedMusicIfNeeded()
         stopping = false
